@@ -6,13 +6,13 @@
 ### Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
 
 ### Apprêter les données annuelles
-1- Faire en sorte que la première ligne du tableur corresponde au nom des colonnes et supprimer toutes les colonnes inutiles, ne garder que : « code_essai » la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres), « commune » la variable contenant le nom des communes (chaine de caractères), « numero_departement » la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), « modalite » la variable contenant l’information du type de modalité (chaines de caractères ou nombre, ex : TR si traité et TNT sinon). Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entier compris entre 0 et 100, exprimés en %), le nom de ces colonnes reste au choix de l’utilisateur (noms courts et sans caractères spéciaux).
+**1-** Faire en sorte que la première ligne du tableur corresponde au nom des colonnes et supprimer toutes les colonnes inutiles, ne garder que : « code_essai » la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres), « commune » la variable contenant le nom des communes (chaine de caractères), « numero_departement » la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), « modalite » la variable contenant l’information du type de modalité (chaines de caractères ou nombre, ex : TR si traité et TNT sinon). Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entier compris entre 0 et 100, exprimés en %), le nom de ces colonnes reste au choix de l’utilisateur (noms courts et sans caractères spéciaux).
 
-2- Faire en sorte que la dernière ligne du tableur non-vide corresponde bien à la dernière observation de fréquence.
+**2-** Faire en sorte que la dernière ligne du tableur non-vide corresponde bien à la dernière observation de fréquence.
 
-3- Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les essais où les fréquences n'ont pas été mesurées. 
+**3-** Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les essais où les fréquences n'ont pas été mesurées. 
 
-4- En utilisant l’outil chercher/remplacer d’Excel, remplacer les caractères spéciaux présents dans les cellules restantes : « ; » point-virgule, « ‘ » apostrophe et « # » symbole dièse, par des espaces vides (ex : L’herbergement#MOD001 devient L herbergement MOD001) ;
+**4-** En utilisant l’outil chercher/remplacer d’Excel, remplacer les caractères spéciaux présents dans les cellules restantes : « ; » point-virgule, « ‘ » apostrophe et « # » symbole dièse, par des espaces vides (ex : L’herbergement#MOD001 devient L herbergement MOD001) ;
 -Si besoin, sélectionner toutes les cellules et faire Clic-droit – Format des cellules – Personnalisée – mettre \”@\” dans Type. Valider avec OK ;
 
 Enregistrer le nouveau tableur au format .csv. Sous excel : Fichier – Enregistrer sous – Type : « CSV (séparateur : point-virgule). Cliquer sur accepter et quittez sans enregistrer à nouveau (si Excel vous le demande).
