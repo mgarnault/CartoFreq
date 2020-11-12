@@ -3,11 +3,11 @@
 &nbsp;  
 
 ## Etapes de préparation des données annuelles
-### > Ouvrir le jeu de données (.xlsx) dans Excel.
+#### > Ouvrir le jeu de données (.xlsx) dans Excel.
 
-### > Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
+#### > Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
 
-### > Apprêter les données
+#### > Apprêter les données
 **1-** Faire en sorte que la première ligne du tableur corresponde au nom des colonnes et supprimer toutes les colonnes inutiles, ne garder que : "code_essai" la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres), "commune" la variable contenant le nom des communes (chaine de caractères), "numero_departement" la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), "modalite" la variable contenant l’information du type de modalité (chaines de caractères ou nombre, ex : TR si traité et TNT sinon). Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entier compris entre 0 et 100, exprimés en %), le nom de ces colonnes reste au choix de l’utilisateur (noms courts et sans caractères spéciaux).
 "code_essai", "commune", "numero_departement" et "modalite" sont des colonnes obligatoires, sans elles l'importation du fichier ne pourra pas se faire dans l'application.
 
@@ -17,7 +17,7 @@
 
 **4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" point-virgules, "‘" apostrophes et "#" symboles dièse, par des espaces vides.
 
-### > Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande).
+#### > Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande).
 
 &nbsp;  
 &nbsp;  
