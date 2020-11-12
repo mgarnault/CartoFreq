@@ -1,6 +1,8 @@
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France
 &nbsp;
-&nbsp;  
+&nbsp;
+
+
 
 ## Etapes de préparation des données annuelles
 #### > Ouvrir le jeu de données (.xlsx) dans Excel.
@@ -15,13 +17,15 @@
 
 **3-** Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les essais où les fréquences n'ont pas été mesurées. 
 
-**4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" point-virgules, "‘" apostrophes et "#" symboles dièse, par des espaces vides.
+**4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" (point-virgules), "'" (apostrophes) et "#" (symboles dièse) par des " " (espaces vides).
 
 #### > Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande).
-&nbsp;  
-&nbsp; 
+&nbsp;
+&nbsp;
 
-## Lancer l’application user.R
+
+
+## Cor l’application user.R
 Importer le nouveau fichier dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
 Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)
 Vérifier les erreurs pour chacune des colonnes : supprimer du fichier .csv toute ligne inutile pour limiter le nombre d’erreurs/lignes retirées données par l’application. Concernant la correction des noms de commune, les modifier dans le document sans mettre les "-" qui sont dans le nom.
