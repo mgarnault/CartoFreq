@@ -2,7 +2,7 @@
 &nbsp;  
 &nbsp;  
 
-## Etapes de préparation des données anuuelles
+## Etapes de préparation des données annuelles
 ### Ouvrir le jeu de données (.xlsx) dans Excel.
 
 ### Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
@@ -17,7 +17,7 @@
 
 **4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" point-virgules, "‘" apostrophes et "#" symboles dièse, par des espaces vides.
 
-### Enregistrer le nouveau tableur au format CSV : *Fichier* –-> *Enregistrer sous* –-> *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (si Excel vous le demande).
+### Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (si Excel vous le demande).
 
 &nbsp;  
 &nbsp;  
