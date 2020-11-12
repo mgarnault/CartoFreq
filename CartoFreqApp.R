@@ -1,4 +1,4 @@
-### VIDANGE DES VARIABLES ET DE L'HISTORIQUE ###
+### VIDANGE DE LA MEMOIRE ###
 rm(list=ls())
 
 

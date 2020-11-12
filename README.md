@@ -26,9 +26,9 @@
 
 
 ## Importation des données dans l'application et correction des erreurs
-#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script.
+#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez les grâce à la fonction *install.packages()*
 
-#### > Importer le fichier CSV dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
+#### > Importer le fichier CSV dans l’application via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
 Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)
 Vérifier les erreurs pour chacune des colonnes : supprimer du fichier .csv toute ligne inutile pour limiter le nombre d’erreurs/lignes retirées données par l’application. Concernant la correction des noms de commune, les modifier dans le document sans mettre les "-" qui sont dans le nom.
 Accéder à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
