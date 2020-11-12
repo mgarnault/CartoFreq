@@ -77,7 +77,7 @@ L'échelle de couleur peut être sauvegardée au format PDF en cliquant sur le b
 L'application affiche automatiquement le nombre de données de fréquences (hors NA), qui ont dûes être écartées de l'analyse par faute ou défaut d'information dans le JDD. 
 La carte affiche les fréquences extrapolées sur le territoire français à partir des points d'observations des essais. Chaque point correspond à un essai. Dans chaque point, sont représentées sous forme de camembert les fréquences observées. Les fréquences observées sont affichées sous forme de camemberts. Les camemberts représentent la fraction de fréquences observées entre 0-25%, 26-50%, 51-75%, 76-100%. Les couleurs choisies pour représenter ces quatres catégories correspondent respectivement aux couleurs des fréquences 12%, 37%, 63% et 88%.
 
-#### > Enregistrer la carte
+#### > Enregistrer la carte.
 Cliquer sur le bouton *Exporter au format PDF*. Le nom de fichier nouvellement créer comporte les informations du phénotype, de l'année et de la modalité cartographiés, ainsi que la date (jj-mm-aaaa) à laquelle a été exporté le PDF.
 
 &nbsp;
@@ -103,4 +103,12 @@ Après avoir sélectionné le JDD pluri-annuel lors de l'importation d'un fichie
 
 
 ## Utilisation de l'application : prédiction régionale des fréquences dans les parcelles non traitées
+#### > Cliquer sur l'onglet *Prediction*.
+Utiliser le slider pour sélectionner la sous-plage temporelle sur lequel le modèle dynamique va estimer les taux de croissance.
 
+#### > Choisir la fréquence 
+
+#### > Choisir la plage temporelle étudiée.
+
+#### > Ajout de varibles explicatives régionales.
+Une fois l'importation des fichiers terminée, re-soumettre l'analyse
