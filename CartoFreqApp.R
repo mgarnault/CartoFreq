@@ -396,7 +396,7 @@ if(interactive()){
       d=d[which(check.numeric(d[,input$selectedPhenotypeStats]) &
                   !is.na(d[,input$selectedPhenotypeStats])),]
       
-      if("annee"%in%colnames(d)){
+      if(input$pluriY | "annee"%in%colnames(d)){
         d=d[which(d$annee==input$selectedYearStats),]
       }
       
