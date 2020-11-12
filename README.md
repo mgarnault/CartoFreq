@@ -13,7 +13,7 @@
 **1-** Faire en sorte que la première ligne du tableur corresponde au nom des colonnes et supprimer toutes les colonnes inutiles, ne garder que : "code_essai" la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres), "commune" la variable contenant le nom des communes (chaine de caractères), "numero_departement" la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), "modalite" la variable contenant l’information du type de modalité (chaines de caractères ou nombre, ex : TR si traité et TNT sinon). Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entier compris entre 0 et 100, exprimés en %), le nom de ces colonnes reste au choix de l’utilisateur (noms courts et sans caractères spéciaux).
 "code_essai", "commune", "numero_departement" et "modalite" sont des colonnes obligatoires, sans elles l'importation du fichier ne pourra pas se faire dans l'application.
 
-**2-** Faire en sorte que la dernière ligne du tableur non-vide corresponde bien à la dernière observation de fréquence.
+**2-** Faire en sorte que la dernière ligne non-vide du tableur corresponde bien à la dernière observation de fréquence.
 
 **3-** Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les essais où les fréquences n'ont pas été mesurées. 
 
@@ -26,7 +26,7 @@
 
 
 ## Importation des données dans l'application et correction des erreurs
-#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout (Ctrl+A), cliquer sur *Run*.
+#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script.
 
 #### > Importer le fichier CSV dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
 Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)

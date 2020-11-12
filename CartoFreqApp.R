@@ -1,23 +1,59 @@
-### EN-TETE ###
+### VIDANGE DES VARIABLES ET DE L'HISTORIQUE ###
 rm(list=ls())
+
+
+
+
+
+
+### PACKAGES ###
+# install.packages("shiny")
 library("shiny")
+# install.packages("shinyjs")
 library("shinyjs")
+# install.packages("shinybusy")
 library("shinybusy")
+# install.packages("shinyFiles")
 library("shinyFiles")
-library("colourpicker")
-library("dplyr")
-library("stringr")
-library("ggplot2")
-library("varhandle")
-library("spaMM")
-library("scatterpie")
-library("glmmTMB")
+# install.packages("shinyWidgets")
 library("shinyWidgets")
+# install.packages("colourpicker")
+library("colourpicker")
+# install.packages("dplyr")
+library("dplyr")
+# install.packages("stringr")
+library("stringr")
+# install.packages("ggplot2")
+library("ggplot2")
+# install.packages("varhandle")
+library("varhandle")
+# install.packages("spaMM")
+library("spaMM")
+# install.packages("scatterpie")
+library("scatterpie")
+# install.packages("glmmTMB")
+library("glmmTMB")
+
+
+
+
+
+### VARIABLES GLOBALES ###
+## Set de variable obligatoires et accessoires pour déterminer les colonnes qui seront des fréquences de résistance (i.e. les autres colonnes) ##
 mandatoryVar=c("code_essai","commune","numero_departement","modalite")
-accessoryVar=c("annee","latitude","longitude") ############### ???
-usualModilities=c("TR","TNT") ################ "T0" "T1/2/3/4/X" ???
-defaultColors=list("0"="#00CD00","25"="#FFFF00","50"="#FFA500","75"="#FF0000","100"="#8B0000") # palette de couleur par defaut utlisee pour les cartographies
-setwd(dirname(rstudioapi::getSourceEditorContext()$path)) # localisation du script user.R (il doit etre place a la racine du dossier /spASW)
+accessoryVar=c("annee","latitude","longitude") # AJOUTER UNE POSSIBILITE D'AJOUTER DIRECTEMENT LES COORDONNEES GPS ?
+
+
+## Noms des modalités acceptées par l'application et l'analyse spatiale ##
+usualModilities=c("TR","TNT") # AJOUTER LA POSSIBILITE D'AVOIR D'AUTRES MODALITES STANDARD "T1/2/3/4/X" ?
+
+
+## Palette de couleur par defaut utlisée pour les cartographies ##
+defaultColors=list("0"="#00CD00","25"="#FFFF00","50"="#FFA500","75"="#FF0000","100"="#8B0000")
+
+
+## Environnement local du script (/path) pour localiser plus facilement les data ##
+setwd(dirname(rstudioapi::getSourceEditorContext()$path)) # /!\ le script R doit toujours être placé à la racine du dossier /CartoFreq
 
 
 
@@ -25,7 +61,7 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path)) # localisation du scri
 
 
 ### FONCTIONS ###
-## Fonction qui permet d'homogeneiser le nom des communes ##
+## Fonction qui permet d'homogénéiser le nom des communes ##
 formatCommune=function(data,colmn){
   return(
     sapply(data[,colmn],function(x){
@@ -39,7 +75,7 @@ formatCommune=function(data,colmn){
 }
 
 
-## Fonction qui permet de realiser le krigeage spatial ##
+## Fonction qui permet de réaliser le krigeage spatial ##
 fillMAP=function(predict,coords,color.range){ # fonction de krigeage spatial
   map.formula=as.formula(paste(attr(predict,"fittedName"),"~1+Matern(1|",paste(coords,collapse="+"),")"))
   
