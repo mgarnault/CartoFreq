@@ -370,9 +370,6 @@ if(interactive()){
       if(is.null(data())){
         return(NULL)
       }
-      if(is.null(input$selectedPhenotypeStats)){
-        return(NULL)
-      }
       input$selectedPhenotypeStats
       input$selectedYearStats
       
