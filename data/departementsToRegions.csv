@@ -1,0 +1,98 @@
+Departement;Region;Region.panel;Departement.map
+67;ALS;Alsace;Bas-Rhin
+68;ALS;Alsace;Haut-Rhin
+24;AQU;Aquitaine;Dordogne
+33;AQU;Aquitaine;Gironde
+40;AQU;Aquitaine;Landes
+47;AQU;Aquitaine;Lot-et-Garonne
+64;AQU;Aquitaine;Pyrenees-Atlantiques
+3;AUV;Auvergne;Allier
+15;AUV;Auvergne;Cantal
+43;AUV;Auvergne;Haute-Loire
+63;AUV;Auvergne;Puy-de-Dome
+14;BNO;Basse Normandie;Calvados
+61;BNO;Basse Normandie;Orne
+21;BOU;Bourgogne;Cote-Dor
+58;BOU;Bourgogne;Nievre
+71;BOU;Bourgogne;Saone-et-Loire
+89;BOU;Bourgogne;Yonne
+22;BRE;Bretagne;Cotes-Darmor
+29;BRE;Bretagne;Finistere
+35;BRE;Bretagne;Ille-et-Vilaine
+56;BRE;Bretagne;Morbihan
+18;CEN;Centre;Cher
+28;CEN;Centre;Eure-et-Loir
+36;CEN;Centre;Indre
+37;CEN;Centre;Indre-et-Loire
+45;CEN;Centre;Loiret
+41;CEN;Centre;Loir-et-Cher
+8;CHA;Champagne Ardennes;Ardennes
+10;CHA;Champagne Ardennes;Aube
+52;CHA;Champagne Ardennes;Haute-Marne
+51;CHA;Champagne Ardennes;Marne
+2A;COR;Corse;Corse du Sud
+2B;COR;Corse;Haute-Corse
+25;FCO;Franche Comté;Doubs
+70;FCO;Franche Comté;Haute-Saone
+39;FCO;Franche Comté;Jura
+90;FCO;Franche Comté;Territoire de Belfort
+27;HNO;Haute Normandie;Eure
+76;HNO;Haute Normandie;Seine-Maritime
+91;IDF;Ile de France;Essonne
+92;IDF;Ile de France;Hauts-de-Seine
+75;IDF;Ile de France;Paris
+77;IDF;Ile de France;Seine-et-Marne
+93;IDF;Ile de France;Seine-Saint-Denis
+94;IDF;Ile de France;Val-de-Marne
+95;IDF;Ile de France;Val-Doise
+78;IDF;Ile de France;Yvelines
+11;LAR;Languedoc Roussillon;Aude
+30;LAR;Languedoc Roussillon;Gard
+34;LAR;Languedoc Roussillon;Herault
+48;LAR;Languedoc Roussillon;Lozere
+66;LAR;Languedoc Roussillon;Pyrenees-Orientales
+19;LIM;Limousin;Correze
+23;LIM;Limousin;Creuse
+87;LIM;Limousin;Haute-Vienne
+54;LOR;Lorraine;Meurthe-et-Moselle
+55;LOR;Lorraine;Meuse
+57;LOR;Lorraine;Moselle
+88;LOR;Lorraine;Vosges
+9;MPY;Midi Pyrénées;Ariege
+12;MPY;Midi Pyrénées;Aveyron
+32;MPY;Midi Pyrénées;Gers
+31;MPY;Midi Pyrénées;Haute-Garonne
+65;MPY;Midi Pyrénées;Hautes-Pyrenees
+46;MPY;Midi Pyrénées;Lot
+81;MPY;Midi Pyrénées;Tarn
+82;MPY;Midi Pyrénées;Tarn-et-Garonne
+59;NPC;Nord Pas de Calais;Nord
+62;NPC;Nord Pas de Calais;Pas-de-Calais
+50;BNO;Basse Normandie;Manche
+44;PDL;Pays de la Loire;Loire-Atlantique
+49;PDL;Pays de la Loire;Maine-et-Loire
+53;PDL;Pays de la Loire;Mayenne
+72;PDL;Pays de la Loire;Sarthe
+85;PDL;Pays de la Loire;Vendee
+2;PIC;Picardie;Aisne
+60;PIC;Picardie;Oise
+80;PIC;Picardie;Somme
+16;PCH;Poitou Charentes;Charente
+17;PCH;Poitou Charentes;Charente-Maritime
+79;PCH;Poitou Charentes;Deux-Sevres
+86;PCH;Poitou Charentes;Vienne
+4;PAC;Provence Alpes Côte d'Azur;Hautes-Alpes
+6;PAC;Provence Alpes Côte d'Azur;Alpes-Maritimes
+13;PAC;Provence Alpes Côte d'Azur;Bouches-du-Rhone
+5;PAC;Provence Alpes Côte d'Azur;Alpes-de-Haute-Provence
+83;PAC;Provence Alpes Côte d'Azur;Var
+84;PAC;Provence Alpes Côte d'Azur;Vaucluse
+1;RAL;Rhône Alpes;Ain
+7;RAL;Rhône Alpes;Ardeche
+26;RAL;Rhône Alpes;Drome
+74;RAL;Rhône Alpes;Haute-Savoie
+38;RAL;Rhône Alpes;Isere
+42;RAL;Rhône Alpes;Loire
+69;RAL;Rhône Alpes;Rhone
+73;RAL;Rhône Alpes;Savoie
+;FRA;France;

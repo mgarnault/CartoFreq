@@ -19,18 +19,25 @@
 
 **4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" (point-virgules), "'" (apostrophes) et "#" (symboles dièse) par des " " (espaces vides).
 
-#### > Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande).
+#### > Enregistrer le nouveau tableur au format CSV : *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande). Placer ce fichier dans le dossier /data.
 &nbsp;
 &nbsp;
 
 
 
-## Importation des données dans l'application et correction des erreurs
-#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez les grâce à la fonction *install.packages()*
+## Utilisation de l'application : correction des erreurs
+#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script.
+Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*
 
-#### > Importer le fichier CSV dans l’application via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
-Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)
-Vérifier les erreurs pour chacune des colonnes : supprimer du fichier .csv toute ligne inutile pour limiter le nombre d’erreurs/lignes retirées données par l’application. Concernant la correction des noms de commune, les modifier dans le document sans mettre les "-" qui sont dans le nom.
+#### > Importer des données
+Importer un jeu de données au formet CSV dans l’application via le bouton *Importer un CSV*.
+
+#### > Vérifier la cohérence des données
+Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc. 
+
+#### > Corriger les erreurs
+Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs relevées par l'application
+Concernant la colonne "commune" a correction des noms de commune, les modifier dans le document sans mettre les "-" qui sont dans le nom.
 Accéder à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
 
 L’analyse spatiale permet de distinguer plusieurs modalité TNT / TR mais potentielle des n° de traitements. L’analyse ressort de manière automatique un test permettant de comparer les modalité deux à deux. Une cartographie peut être réalisée en prenant en compte l’effet des différentes modalités (e.g. traité vs. non-traité, ou TR1 vs. TR2 vs TNT), ou en ne considérant pas ces différences de modalité de traitement (i.e. toutes les observations d’un même essai sont considérées comme étant des répétitions équivalentes entre-elles : "All"). Pour l’instant seules les modalités TR et TNT ne ressortent pas d’erreurs et peuvent être considérées dans le modèle, mais libre à l’utilisateur d’ajouter de nouvelles modalité (TRx) dans le vecteur au début du script R.
