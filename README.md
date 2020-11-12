@@ -1,6 +1,8 @@
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France
+
 &nbsp;
 &nbsp;
+
 
 
 
@@ -21,8 +23,10 @@
 
 #### > Enregistrer le nouveau tableur au format CSV.
 *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande). Placer ce fichier dans le dossier /data.
+
 &nbsp;
 &nbsp;
+
 
 
 
@@ -39,28 +43,33 @@ Comparer l'affichage des données dans l'application avec le fichier CSV d'origi
 #### > Corriger les erreurs.
 Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs renvoyées par l'application. Moins il y aura d'erreurs moins l'application retirera de données lors de l'analyse automatisée des données.
 Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche).
+
 &nbsp;
 &nbsp;
+
 
 
 
 ## Utilisation de l'application : affichage des statistiques annuelles
 #### > Cliquer sur le bouton *Afficher les statistiques annuelles*.
 Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Acronymes des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
+
 &nbsp;
 &nbsp;
+
 
 
 
 ## Utilisation de l'application : cartographie anuelle des fréquences
 #### > 
+
 &nbsp;
 &nbsp;
 
 
 
-## Utilisation de l'application : affichage des statistiques annuelles
-#### > Préférablement après avoir corrigé les erreurs 
+
+## Utilisation de l'application : prédiction régionales sur témoins non traités
 
 
 Accéder à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
