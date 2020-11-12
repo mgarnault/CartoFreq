@@ -121,7 +121,17 @@ MakePlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRatio,ext
   
   p=p+geom_point(aes(x=CX/plotRatio,y=CY),data=krig,color=krig$Pred,pch=15,size=1) # arriere-plan couleur indiquant les frequences extrapolees par krigeage
   
-  colorLegend=colorLegend[as.numeric(which(apply(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))],2,function(x){!all(x==0)})))]
+  print(d2)
+  print(summary(d2))
+  print(dim(d2))
+  print(which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100")))
+  print(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))])
+  print(apply(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))],
+              2,
+              function(x){!all(x==0)}))
+  colorLegend=colorLegend[as.numeric(which(apply(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))],
+                                                 2,
+                                                 function(x){!all(x==0)})))]
   p=p+scale_fill_manual(values=colorLegend)
   
   p=p+theme(panel.background=element_blank(), # arriere-plan blanc
@@ -875,8 +885,7 @@ if(interactive()){
         # Nouveau data contenant les frequences observees par essai, representees sous forme de camembert (4 categories: 0-25 25-50 50-75 75-100) #
         d2=rep(NA,7)
         names(d2)=c("region","longitude","latitude","F0.to.25","F26.to.50","F51.to.75","F76.to.100")
-        print(length(table(d$code_essai)))
-        for(j in names(table(d$code_essai))){ ################ TABLE(CODE_ESSAI) OU TABLE(PASTE(LAT:LONG)) ????
+        for(j in names(table(d$code_essai))){
           d2=rbind(d2,c(
             d$region[which(d$code_essai==j)][1],
             d$longitude[which(d$code_essai==j)][1],

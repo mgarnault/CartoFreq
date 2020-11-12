@@ -7,7 +7,7 @@
 
 
 ## Etapes de préparation des données annuelles
-#### > Ouvrir le jeu de données (.xlsx) dans Excel.
+#### > Ouvrir le jeu de données (.xls ou .xlsx) dans Excel.
 
 #### > Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
 
@@ -54,6 +54,7 @@ Le fichier CSV peut être modifié en direct alors que celui-ci est importé dan
 ## Utilisation de l'application : affichage des statistiques annuelles
 #### > Cliquer sur le bouton *Afficher les statistiques annuelles* qui se situe sur le panneau de gauche sous le bouton d'importation 
 Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Acronymes des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
+Il est conseillé de décocher le bouton d'affichage des statistiques annuelles avant la ré-importation d'un nouveau fichier CSV pour éviter les bugs.
 
 &nbsp;
 &nbsp;
@@ -69,10 +70,14 @@ L'année, le phénotype et la modalité choisi seront indiqués en titre du grap
 
 #### > Si besoin, modifier l'échelle de couleur pour les fréquences.
 Cliquer sur la palette pour redéfinir les couleurs aux seuil : 0%, 25%, 50%, 75% et 100%. L'application se charge automatiquement de réaliser le gradient de couleur correspondant.
-L'échelle de couleur peut être sauvegardée au format PDF en cliquant sur le bouton *Exporter la légende au format PDF*. Le titre du généré correspondra aux différents seuils de couleurs choisis en code hexadécimal pour ré-utilisation si nécessaire. Les couelurs de base peuvent être modifiées en changeant les valeurs dans le vecteur *defaultColors* du script R.
+L'échelle de couleur peut être sauvegardée au format PDF en cliquant sur le bouton *Exporter la légende au format PDF*. Le titre du fichier généré correspondra aux différents seuils de couleurs choisis (en code hexadécimal) pour ré-utilisation si nécessaire. Les couleurs du gradient de base peuvent être modifiées en changeant les valeurs dans la liste *defaultColors* du script R. Le titre intègre également la date (jj-mm-aaaa) à laquelle a été exporté le PDF.
 
-#### > 
-e à droite s à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
+#### > Cliquer sur le bouton *Soumettre*.
+L'application affiche automatiquement le nombre de données de fréquences (hors NA), qui ont dûes être écartées de l'analyse par faute ou défaut d'information dans le jeu de données. 
+La carte affiche les fréquences extrapolées sur le territoire français à partir des points d'observations des essais. Chaque point correspond à un essai. Dans chaque point, sont représentées sous forme de camembert les fréquences observées. Les fréquences observées sont affichées sous forme de camemberts. Les camemberts représentent la fraction de fréquences observées entre 0-25%, 26-50%, 51-75%, 76-100%. Les couleurs choisies pour représenter ces quatres catégories correspondent respectivement aux couleurs des fréquences 12%, 37%, 63% et 88%.
+
+#### > Enregistrer la carte
+Cliquer sur le bouton *Exporter au format PDF*. Le nom de fichier nouvellement créer comporte les informations du phénotype, de l'année et de la modalité cartographiés, ainsi que la date (jj-mm-aaaa) à laquelle a été exporté le PDF.
 
 &nbsp;
 &nbsp;
