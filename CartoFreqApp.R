@@ -373,44 +373,48 @@ if(interactive()){
       if(is.null(input$selectedPhenotypeStats)){
         return(NULL)
       }
+      input$selectedPhenotypeStats
+      input$selectedYearStats
       
-      d=data()
-      d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-        if(!is.na(x)){
-          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-        }else{return(NA)}
-      })
-      
-      d$region=sapply(d$numero_departement,function(x){
-        if(!is.na(x)){
-          if(x%in%deptReg$Departement){
-            return(deptReg$Region[which(deptReg$Departement==x)])
+      isolate({
+        d=data()
+        d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
+          if(!is.na(x)){
+            if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+          }else{return(NA)}
+        })
+        
+        d$region=sapply(d$numero_departement,function(x){
+          if(!is.na(x)){
+            if(x%in%deptReg$Departement){
+              return(deptReg$Region[which(deptReg$Departement==x)])
+            }else{
+              return(NA)
+            }
           }else{
             return(NA)
           }
-        }else{
-          return(NA)
+        })
+        
+        d=d[which(check.numeric(d[,input$selectedPhenotypeStats]) &
+                    !is.na(d[,input$selectedPhenotypeStats])),]
+        
+        if(input$pluriY | "annee"%in%colnames(d)){
+          d=d[which(d$annee==input$selectedYearStats),]
         }
+        
+        out=aggregate(d[,input$selectedPhenotypeStats],
+                      list(d$region),
+                      "mean")
+        out=data.frame(cbind(out,as.numeric(table(d$region))))
+        
+        FRA=mean(d[,input$selectedPhenotypeStats])
+        colnames(out)=c("Région",input$selectedPhenotypeStats,"n")
+        out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
+        out[,input$selectedPhenotypeStats]=as.numeric(out[,input$selectedPhenotypeStats])
+        
+        return(out)
       })
-      
-      d=d[which(check.numeric(d[,input$selectedPhenotypeStats]) &
-                  !is.na(d[,input$selectedPhenotypeStats])),]
-      
-      if(input$pluriY | "annee"%in%colnames(d)){
-        d=d[which(d$annee==input$selectedYearStats),]
-      }
-      
-      out=aggregate(d[,input$selectedPhenotypeStats],
-                    list(d$region),
-                    "mean")
-      out=data.frame(cbind(out,as.numeric(table(d$region))))
-      
-      FRA=mean(d[,input$selectedPhenotypeStats])
-      colnames(out)=c("Région",input$selectedPhenotypeStats,"n")
-      out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
-      out[,input$selectedPhenotypeStats]=as.numeric(out[,input$selectedPhenotypeStats])
-      
-      return(out)
     })
     
     

@@ -55,7 +55,6 @@ Le fichier CSV peut être modifié en direct alors que celui-ci est importé dan
 #### > Cliquer sur le bouton *Afficher les statistiques annuelles* qui se situe sur le panneau de gauche sous le bouton d'importation.
 Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes "numero_departement" et de la fréquence considérée) avant de calculer les fréquences moyennes régionales et nationale. Par exemple, si un numero de département est manquant/faux la fréquence associée ne sera pas considérée dans la moyenne régionale. En revanche, la fréquence associée au département manquant/faux participera tout de même au calcul de la fréquence nationale. Est associé aux fréquences moyennes régionales et natioanle le nombre de données sur lequel la moyenne a été calculé (colonne "n").
 Acronymes des régions (découpage administratif avant la réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
-Il est conseillé de décocher le bouton d'affichage des statistiques annuelles avant la ré-importation d'un nouveau fichier CSV pour éviter certains bugs.
 
 &nbsp;
 &nbsp;
