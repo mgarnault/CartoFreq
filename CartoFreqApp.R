@@ -370,8 +370,9 @@ if(interactive()){
       if(is.null(data())){
         return(NULL)
       }
-      input$selectedPhenotypeStats
-      input$selectedYearStats
+      if(is.null(input$selectedPhenotypeStats) & is.null(input$selectedYearStats)){
+        return(NULL)
+      }
       
       isolate({
         d=data()
@@ -576,7 +577,24 @@ if(interactive()){
         
         # Erreurs liees au frequences de resistance (categorie par defaut) #
       }else{
-        unkwnFrequency=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))]))
+        unkwnFrequency=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))])) # Fréquences qui ne sont pas des valeur numériques
+        
+        if(length(unkwnFrequency)>0){ # Transformation des fréquences en valeurs numériques
+          d[,currentCol][which(!check.numeric(d[,currentCol]))]=NA # Evite de générer un message d'erreur
+        }
+        d[,currentCol]=as.numeric(d[,currentCol])
+        
+        unkwnFrequency=c(unkwnFrequency, # Fréquences qui sont des valeurs numériques <0 ou >100
+                         d[,currentCol][
+                           which(d[,currentCol][which(check.numeric(d[,currentCol]))]>100 |
+                                 d[,currentCol][which(check.numeric(d[,currentCol]))]<0)
+                         ])
+        
+        unkwnFrequency=c(unkwnFrequency, # Fréquences qui ne sont pas des entiers
+                         d[,currentCol][
+                           which(d[,currentCol]!=round(d[,currentCol]))
+                         ])
+        
         unkwnMessages=sapply(unkwnFrequency,function(x){ # liste des frequences non numeriques + lignes correspondantes
           paste0(x," [ligne(s) : ",paste((which(d[,currentCol]==x)+1),collapse=" "),"]")})
         
@@ -811,7 +829,7 @@ if(interactive()){
                                       is.na(d$modalite) | 
                                       is.na(d[,input$selectedColumnPlot]) | 
                                       !d$modalite%in%usualModilities | 
-                                      !check.numeric(d[,input$selectedColumnPlot]) | 
+                                      !check.numeric(d[,input$selectedColumnPlot]) |  ########### freq<100 & freq>0 & freq==round(freq) ??
                                       !d$numero_departement%in%deptReg$Departement))))
         
         if(input$pluriY | "annee"%in%colnames(d)){
