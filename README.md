@@ -45,8 +45,8 @@ Concernant la colonne "commune" il peut être nécessaire de chercher dans le fi
 
 
 ## Utilisation de l'application : affichage des statistiques annuelles
-#### > Cliquer sur le bouton * *
-Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Acronymes des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*
+#### > Cliquer sur le bouton *Afficher les statistiques annuelles*.
+Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Acronymes des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
 &nbsp;
 &nbsp;
 
