@@ -28,7 +28,7 @@
 
 ## Utilisation de l'application : correction des erreurs
 #### > Ouvrir le script CartoFreqApp.R dans Rstudio.
-Sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*
+Sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*.
 
 #### > Importer des données.
 Importer un jeu de données au formet CSV dans l’application via le bouton *Importer un CSV*.
@@ -37,7 +37,7 @@ Importer un jeu de données au formet CSV dans l’application via le bouton *Im
 Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc. 
 
 #### > Corriger les erreurs.
-Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs renvoyées par l'application.
+Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs renvoyées par l'application. Moins il y aura d'erreurs moins l'application retirera de données lors de l'analyse automatisée des données.
 Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche).
 &nbsp;
 &nbsp;
@@ -45,7 +45,8 @@ Concernant la colonne "commune" il peut être nécessaire de chercher dans le fi
 
 
 ## Utilisation de l'application : affichage des statistiques annuelles
-#### > Préférablement après avoir corrigé les erreurs 
+#### > Cliquer sur le bouton * *
+Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Code des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes.
 &nbsp;
 &nbsp;
 
