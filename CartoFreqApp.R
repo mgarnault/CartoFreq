@@ -61,10 +61,10 @@ setwd(dirname(rstudioapi::getSourceEditorContext()$path)) # /!\ le script R doit
 
 
 ### FONCTIONS ###
-## Fonction qui permet d'homogénéiser le nom des communes ##
-formatCommune=function(data,colmn){
+## Fonction qui permet d'homogénéiser le nom des communes entre les différents data ##
+formatCommune=function(data,column){
   return(
-    sapply(data[,colmn],function(x){
+    sapply(data[,column],function(x){
       x=str_to_upper(iconv(as.character(x),to="ASCII//TRANSLIT"))
       if(grepl("-",x)){x=gsub("-"," ",x)}
       if(grepl("SAINT ",x)){x=gsub("SAINT ","ST ",x)}
