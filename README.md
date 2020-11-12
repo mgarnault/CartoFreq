@@ -89,6 +89,7 @@ Cliquer sur le bouton *Exporter au format PDF*. Le nom de fichier nouvellement c
 #### > Compiler à la main un JDD pluri-annuel.
 Après avoir réalisé les étapes de préparation des données et traité un maximum des erreurs retournées par l'application pour une première analyse annuelle, il est intéressant de compiler les différentes données annuelles dans un seul et même JDD pluri-annuel. L'objectif étant de réaliser une analyse dynamique de l'évolution des fréquences.
 Pour cela, concaténer les JDD annuels dans un seul et même fichier Excel (copier-coller), en rajoutant l'information de l'année correspondant dans une nouvelle colonne "annee".
+
 :warning: ATTENTION à bien faire coincider les colonnes entre-elles, en particulier les colonnes de fréquence. Si un nouveau type de fréquence apparait, ou qu'une fréquence n'est plus mesurée à une année donnée laisser les cases correspondantes vides.
 
 #### > Importer le fichier pluri-annuel dans l'application
