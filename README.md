@@ -1,4 +1,6 @@
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France
+&nbsp  
+&nbsp  
 
 ## Etapes de préparation des données anuuelles
 ### Ouvrir le jeu de données (.xlsx) dans Excel.
@@ -17,7 +19,8 @@
 
 ### Enregistrer le nouveau tableur au format CSV : *Fichier* –-> *Enregistrer sous* –-> *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (si Excel vous le demande).
 
-
+&nbsp  
+&nbsp  
 ## Lancer l’application user.R
 Importer le nouveau fichier dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
 Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)
