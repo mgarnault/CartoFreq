@@ -41,8 +41,9 @@ Importer un jeu de données au format CSV dans l’application via le bouton *Im
 Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc. 
 
 #### > Corriger les erreurs.
-Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs renvoyées par l'application. Moins il y aura d'erreurs moins l'application retirera de données lors de l'analyse automatisée des données.
+Dans la partie "Affichage des erreurs", regarder et corriger dans le fichier CSV le maximum des erreurs renvoyées par l'application. Moins il y aura d'erreurs, moins l'application sera forcée à retirer des observations lors de l'analyse automatisée des données.
 Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche).
+Le fichier CSV peut être modifié en direct alors que celui-ci est importé dans l'application. Dans ce cas, après avoir modifié puis enregistrer les modifications (sous Excel), cliquer sur le bouton *Rafraîchi* pour automatiquement ré-importer le fichier.
 
 &nbsp;
 &nbsp;
@@ -51,7 +52,7 @@ Concernant la colonne "commune" il peut être nécessaire de chercher dans le fi
 
 
 ## Utilisation de l'application : affichage des statistiques annuelles
-#### > Cliquer sur le bouton *Afficher les statistiques annuelles*.
+#### > Cliquer sur le bouton *Afficher les statistiques annuelles* qui se situe sur le panneau de gauche sous le bouton d'importation 
 Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes département et fréquence) avant de calculer les fréquences moyennes régionales et nationale. Acronymes des régions (découpage administratif pré-réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
 
 &nbsp;
@@ -60,8 +61,18 @@ Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les co
 
 
 
-## Utilisation de l'application : cartographie anuelle des fréquences
+## Utilisation de l'application : cartographie annuelle des fréquences
+#### > Cliquer sur l'onglet *Cartographie* qui apparait après l'importation d'un fichier.
+
+#### > Renseigner les informations nécessaires dans le formulaire à gauche.
+L'année, le phénotype et la modalité choisi seront indiqués en titre du graphique.
+
+#### > Si besoin, modifier l'échelle de couleur pour les fréquences.
+Cliquer sur la palette pour redéfinir les couleurs aux seuil : 0%, 25%, 50%, 75% et 100%. L'application se charge automatiquement de réaliser le gradient de couleur correspondant.
+L'échelle de couleur peut être sauvegardée au format PDF en cliquant sur le bouton *Exporter la légende au format PDF*. Le titre du généré correspondra aux différents seuils de couleurs choisis en code hexadécimal pour ré-utilisation si nécessaire. Les couelurs de base peuvent être modifiées en changeant les valeurs dans le vecteur *defaultColors* du script R.
+
 #### > 
+e à droite s à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
 
 &nbsp;
 &nbsp;
@@ -69,10 +80,14 @@ Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les co
 
 
 
-## Utilisation de l'application : prédiction régionales sur témoins non traités
+## Mise en forme d'un jeu de données pluri-annuel
 
 
-Accéder à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
+
+## Utilisation de l'application : prédiction régionale des fréquences sur parcelles non traitées
+
+
+
 
 L’analyse spatiale permet de distinguer plusieurs modalité TNT / TR mais potentielle des n° de traitements. L’analyse ressort de manière automatique un test permettant de comparer les modalité deux à deux. Une cartographie peut être réalisée en prenant en compte l’effet des différentes modalités (e.g. traité vs. non-traité, ou TR1 vs. TR2 vs TNT), ou en ne considérant pas ces différences de modalité de traitement (i.e. toutes les observations d’un même essai sont considérées comme étant des répétitions équivalentes entre-elles : "All"). Pour l’instant seules les modalités TR et TNT ne ressortent pas d’erreurs et peuvent être considérées dans le modèle, mais libre à l’utilisateur d’ajouter de nouvelles modalité (TRx) dans le vecteur au début du script R.
 

@@ -215,8 +215,8 @@ if(interactive()){
                                        fluidRow(column(4,shinyFilesButton(id="file1",label="Importer un CSV",title="",multiple=FALSE,icon=icon("file-upload"))),
                                                 column(1,uiOutput("refreshData"))),
                                        h4(htmlOutput("fileName")),
-                                       uiOutput("pluriannual"),
                                        uiOutput("annualStats"),
+                                       uiOutput("pluriannual"),
                                        uiOutput("yearNameStats"),
                                        uiOutput("phenotypeNameStats"),
                                        uiOutput("tableStats"),
@@ -229,10 +229,10 @@ if(interactive()){
                                        uiOutput("modalityChoicePlot"),
                                        fluidRow(column(10,imageOutput("legendPic",height="30px")),
                                                 column(2,uiOutput("graphicsButton"))),
+                                       uiOutput("legendSave"),
                                        hr(),
                                        uiOutput("cartoGO"),
-                                       uiOutput("cartoSave"),
-                                       uiOutput("legendSave")
+                                       uiOutput("cartoSave")
                       ),
                       conditionalPanel(condition="input.tabs==3",
                                        uiOutput("sliderY"),
@@ -623,6 +623,10 @@ if(interactive()){
     
     ## Choix de l'utilisateur pour enregistrer la carte au format PDF ##
     output$cartoSave <- renderUI({ # affiche le bouton d'exportation du plot()
+      if(is.null(plot())){
+        return(NULL)
+      }
+      
       return(actionButton("exportCartography","Exporter la carte au format PDF",icon("download")))
     })
     
@@ -721,7 +725,7 @@ if(interactive()){
     
     
     
-    ## Choix de l'utilisateur pour faire la cartographie des modalites TR / TNT / TR+TNT
+    ## Choix de l'utilisateur pour faire la cartographie des modalites TR / TNT / All=TR+TNT
     output$modalityChoicePlot <- renderUI({
       if(is.null(input$selectedColumnPlot)){
         return(NULL)
@@ -733,7 +737,7 @@ if(interactive()){
       d=data()
       d=d[which(!is.na(d[,input$selectedColumnPlot]) &
                   d$modalite%in%usualModilities),]
-      if(input$pluriY){
+      if(input$pluriY | "annee"%in%colnames(d)){
         d=d[which(d$annee==input$year),]
       }
       modalities=table(d$modalite)
