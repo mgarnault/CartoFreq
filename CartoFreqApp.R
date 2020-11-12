@@ -396,7 +396,8 @@ if(interactive()){
         
         d=d[which(check.numeric(d[,input$selectedPhenotypeStats]) &
                     !is.na(d[,input$selectedPhenotypeStats])),]
-        
+        d[,input$selectedPhenotypeStats]=as.numeric(d[,input$selectedPhenotypeStats])
+
         if(input$pluriY | "annee"%in%colnames(d)){
           d=d[which(d$annee==input$selectedYearStats),]
         }
@@ -405,12 +406,12 @@ if(interactive()){
                       list(d$region),
                       "mean")
         out=data.frame(cbind(out,as.numeric(table(d$region))))
-        
+
         FRA=mean(d[,input$selectedPhenotypeStats])
         colnames(out)=c("Région",input$selectedPhenotypeStats,"n")
         out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
         out[,input$selectedPhenotypeStats]=as.numeric(out[,input$selectedPhenotypeStats])
-        
+
         return(out)
       })
     })
@@ -579,6 +580,7 @@ if(interactive()){
       }else{
         unkwnFrequency=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))])) # Fréquences qui ne sont pas des valeur numériques
         
+        memory=d[,currentCol]
         if(length(unkwnFrequency)>0){ # Transformation des fréquences en valeurs numériques
           d[,currentCol][which(!check.numeric(d[,currentCol]))]=NA # Evite de générer un message d'erreur
         }
@@ -596,7 +598,7 @@ if(interactive()){
                          ])
         
         unkwnMessages=sapply(unkwnFrequency,function(x){ # liste des frequences non numeriques + lignes correspondantes
-          paste0(x," [ligne(s) : ",paste((which(d[,currentCol]==x)+1),collapse=" "),"]")})
+          paste0(x," [ligne(s) : ",paste((which(memory==x)+1),collapse=" "),"]")})
         
         if(length(unkwnFrequency)!=0){
           return(paste0("<p>La colonne \"",currentCol,"\" contient ",length(which(is.na(d[,currentCol])))," NA (",
