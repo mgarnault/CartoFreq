@@ -1,4 +1,4 @@
-# CartoFreq : A shinyapp to display and make prediction map of frequency data in France
+# CartoFreq : A shinyapp to display and make prediction map of frequency data in France BLABLABLA
 
 &nbsp;
 &nbsp;
@@ -35,7 +35,7 @@
 Sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*.
 
 #### > Importer des données.
-Importer un jeu de données au formet CSV dans l’application via le bouton *Importer un CSV*.
+Importer un jeu de données au format CSV dans l’application via le bouton *Importer un CSV*.
 
 #### > Vérifier la cohérence des données.
 Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc. 
