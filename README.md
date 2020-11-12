@@ -1,4 +1,3 @@
-<div style="text-align:justify;">
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France
 &nbsp;
 &nbsp;
@@ -26,8 +25,10 @@
 
 
 
-## Cor l’application user.R
-Importer le nouveau fichier dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
+## Importation des données dans l'application et correction des erreurs
+#### > Ouvrir le script CartoFreqApp.R dans Rstudio, sélectionner tout (Ctrl+A), cliquer sur *Run*.
+
+#### > Importer le fichier CSV dans l’interface via le bouton Browse. N’importequel fichier importer doit se trouver dans le dossier "/data" pour permettre l’importation.
 Vérifier l’adéquation des données entre l’interface graphique et le tableur (bon nombre de lignes, colonnes, présence et forme des données, etc.)
 Vérifier les erreurs pour chacune des colonnes : supprimer du fichier .csv toute ligne inutile pour limiter le nombre d’erreurs/lignes retirées données par l’application. Concernant la correction des noms de commune, les modifier dans le document sans mettre les "-" qui sont dans le nom.
 Accéder à l’onglet Cartographie, renseigner le formuler et appuyer sur le bouton Soumettre pour générer la cartographie. L’année servira pour le titre du graphique
@@ -36,4 +37,3 @@ L’analyse spatiale permet de distinguer plusieurs modalité TNT / TR mais pote
 
 La page d’accueil d’indiquer si le JDD est pluri-annuel (permet d’afficher l’onglet prédiction). Mais l’application détectera automatiquement si la colonne "annee" est présente dans le JDD pour faire les cartographies annuelles ou l’affichage des statistiques annuelles. 
 La page d’accueil permet d’indiquer si l’on souhaite afficher les fréquences moyenne pour un phénotype donné en France et dans les différentes régions de France. Si l’application détecte une colonne année, celle-ci demandera à l’utilisateur de choisir l’année. ATTENTION : bien faire les corrections sur le fichier (départements / fréquences) avant de calculer les fréquences moyennes, sinon des données seront retirées sans l’indiquer à l’utilisateur dans le calcul des fréquences. Si le numéro de département est manquant/inconnu, la fréquence associée ne participera pas à la fréquence moyenne de la région, mais participera tout de même dans la fréquence nationale.
-</div>
