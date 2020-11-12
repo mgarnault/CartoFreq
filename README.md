@@ -16,7 +16,7 @@
 **4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" point-virgules, "‘" apostrophes et "#" symboles dièse, par des espaces vides.
 
 ### Enregistrer le nouveau tableur au format CSV : *Fichier* –-> *Enregistrer sous* –-> *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (si Excel vous le demande).
-
+ 
 
 
 Lancer l’application user.R
