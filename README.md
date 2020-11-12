@@ -66,7 +66,7 @@ Il est conseillé de décocher le bouton d'affichage des statistiques annuelles 
 #### > Cliquer sur l'onglet *Cartographie* qui apparait après l'importation d'un fichier.
 
 #### > Renseigner les informations nécessaires dans le formulaire à gauche.
-L'année, le phénotype et la modalité choisi seront indiqués en titre du graphique.
+L'année, le phénotype et la modalité choisi seront indiqués en titre du graphique. L'utilisateur à le choix de cartographier un type de modalité en particulier (ex: témoin non-traité VS modalité traitée), mais il peut également considérer que toutes les modalités sont des répétitions homogènes au sein d'un essai. 
 
 #### > Si besoin, modifier l'échelle de couleur pour les fréquences.
 Cliquer sur la palette pour redéfinir les couleurs aux seuil : 0%, 25%, 50%, 75% et 100%. L'application se charge automatiquement de réaliser le gradient de couleur correspondant.
