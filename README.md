@@ -1,2 +1,1 @@
-# CartoFreq
-A shinyapp to display map of frequency data
+# CartoFreq : a shinyapp to display map of frequency data
