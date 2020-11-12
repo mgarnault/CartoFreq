@@ -6,10 +6,8 @@
 
 ## Etapes de préparation des données annuelles
 #### > Ouvrir le jeu de données (.xlsx) dans Excel.
-&nbsp;
 
 #### > Supprimer les formules pour ne garder que des caractères/chiffres dans les cellules.
-&nbsp;
 
 #### > Apprêter les données.
 **1-** Faire en sorte que la première ligne du tableur corresponde au nom des colonnes et supprimer toutes les colonnes inutiles, ne garder que : "code_essai" la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres), "commune" la variable contenant le nom des communes (chaine de caractères), "numero_departement" la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), "modalite" la variable contenant l’information du type de modalité (chaines de caractères ou nombre, ex : TR si traité et TNT sinon). Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entier compris entre 0 et 100, exprimés en %), le nom de ces colonnes reste au choix de l’utilisateur (noms courts et sans caractères spéciaux).
@@ -20,7 +18,6 @@
 **3-** Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les essais où les fréquences n'ont pas été mesurées. 
 
 **4-** Remplacer les caractères spéciaux présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" (point-virgules), "'" (apostrophes) et "#" (symboles dièse) par des " " (espaces vides).
-&nbsp;
 
 #### > Enregistrer le nouveau tableur au format CSV.
 *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande). Placer ce fichier dans le dossier /data.
@@ -32,15 +29,12 @@
 ## Utilisation de l'application : correction des erreurs
 #### > Ouvrir le script CartoFreqApp.R dans Rstudio.
 Sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*
-&nbsp;
 
 #### > Importer des données.
 Importer un jeu de données au formet CSV dans l’application via le bouton *Importer un CSV*.
-&nbsp;
 
 #### > Vérifier la cohérence des données.
-Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc.
-&nbsp;
+Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc. 
 
 #### > Corriger les erreurs.
 Dans la partie "Affichage des erreurs", regarder et corriger le maximum d'erreurs renvoyées par l'application.
