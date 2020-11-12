@@ -1,4 +1,4 @@
-# CartoFreq : A shinyapp to display and make prediction map of frequency data in France BLABLABLA
+# CartoFreq : A shinyapp to display and make prediction map of frequency data in France
 
 &nbsp;
 &nbsp;
