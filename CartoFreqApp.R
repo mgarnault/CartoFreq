@@ -253,8 +253,8 @@ if(interactive()){
                                        uiOutput("cartoSave")
                       ),
                       conditionalPanel(condition="input.tabs==3",
-                                       uiOutput("sliderY"),
                                        uiOutput("columnChoicePlotPred"),
+                                       uiOutput("sliderY"),
                                        hr(),
                                        uiOutput("predGO"))),
                     
@@ -452,7 +452,7 @@ if(interactive()){
           removeTab(inputId="tabs",target="3")
         }else{
           insertTab(inputId="tabs",
-                    tabPanel(title=h4("Prediction"),value="3",plotOutput("graphPred")),
+                    tabPanel(title=h4("Prédiction"),value="3",plotOutput("graphPred")),
                     target="2",
                     position="after")
         }
@@ -658,6 +658,9 @@ if(interactive()){
     
     output$yearName <- renderUI({ # affiche le champ pour selectionner l'Annee
       if(is.null(data())){
+        return(NULL)
+      }
+      if(is.null(input$pluriY)){
         return(NULL)
       }
       if(is.null(input$selectedColumnPlot)){
@@ -1028,6 +1031,47 @@ if(interactive()){
     
     
     
+    ## Selection des donnees par l'utilisateur pour l'analyse predictive regionale ##
+    # Liste déroulante des phénotypes disponibles à la prédiction #
+    output$columnChoicePlotPred <- renderUI({
+      if(is.null(data())){
+        return(NULL)
+      }
+      
+      return(selectInput("selectedColumnPlotPred","Fréquence :",colnames(data())[
+        which(!colnames(data())%in%c(mandatoryVar,accessoryVar))]))
+    })
+    
+    # Slider permettant à l'utilisateur de sélectionner les années d'intérêt pour le phénotype choisi #
+    output$sliderY <- renderUI({
+      if(is.null(data())){
+        return(NULL)
+      }
+      if(is.null(input$pluriY)){
+        return(NULL)
+      }
+      if(is.null(input$selectedColumnPlotPred)){
+        return(NULL)
+      }
+      
+      d=data()
+      years=names(table(d$annee[which(!is.na(d[,input$selectedColumnPlotPred]))]))
+      firstY=min(as.numeric(years))
+      lastY=max(as.numeric(years))
+      
+      return(sliderInput("timeRange","Années :",
+                         min=firstY,max=lastY,sep="",
+                         value=c(firstY,lastY),
+                         ticks=FALSE))
+    })
+    
+    # Bouton permettant de l'ancer l'analyse dynamique des fréquences #
+    output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
+      return(actionButton("doPred","Soumettre",icon("sync-alt")))
+    })
+    
+    
+    
     ## Affichage du graphique des predictions ##
     output$graphPred <- renderPlot({
       print(input$timeRange)
@@ -1046,34 +1090,6 @@ if(interactive()){
       isolate({ # evite de recalculer la cartographie lorsque l'utilisateur modifie simplement les valeurs de sliderAnnee et Phenotype
         d=data()
       })
-    })
-    
-    
-    
-    ## Selection des donnees par l'tilisation pour l'analyse predictive regionale ##
-    output$columnChoicePlotPred <- renderUI({ # affiche une liste deroulante avec les Phenotypes du fichier importe (colonnes autres que mandatoryVar & accessoryVar)
-      return(selectInput("selectedColumnPlotPred","Fréquence :",colnames(data())[
-        which(!colnames(data())%in%c(mandatoryVar,accessoryVar))]))
-    })
-    
-    output$sliderY <- renderUI({
-      if(is.null(input$pluriY)){
-        return(NULL)
-      }
-      if(is.null(input$selectedColumnPlotPred)){
-        return(NULL)
-      }
-      
-      d=data()
-      firstY=min(as.numeric(names(table(d$annee)))) # AJOUTER LA CONTRAINTE DU PHENOTYPE SELECTIONNE DANS columnChoicePlotPred
-      lastY=max(as.numeric(names(table(d$annee))))
-      return(sliderInput("timeRange","Années :",
-                         min=firstY,max=lastY,sep="",
-                         value=c(firstY,lastY)))
-    })
-    
-    output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
-      return(actionButton("doPred","Soumettre",icon("sync-alt")))
     })
     
     
