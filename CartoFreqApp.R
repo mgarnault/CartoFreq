@@ -858,7 +858,7 @@ if(interactive()){
                                       is.na(d$modalite) | 
                                       is.na(d[,input$selectedColumnPlot]) | 
                                       !d$modalite%in%usualModilities | 
-                                      !check.numeric(d[,input$selectedColumnPlot]) | # AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ !
+                                      !check.numeric(d[,input$selectedColumnPlot]) | # AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
                                       !d$numero_departement%in%deptReg$Departement))))
         
         if(input$pluriY | "annee"%in%colnames(d)){
@@ -1065,7 +1065,9 @@ if(interactive()){
                          ticks=FALSE))
     })
     
-    # Bouton permettant de l'ancer l'analyse dynamique des fréquences #
+    
+    
+    ## Bouton permettant de lancer l'analyse dynamique des fréquences ##
     output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
       return(actionButton("doPred","Soumettre",icon("sync-alt")))
     })
@@ -1073,12 +1075,12 @@ if(interactive()){
     
     
     ## Affichage du graphique des predictions ##
+    # Rendu du plot #
     output$graphPred <- renderPlot({
-      print(input$timeRange)
-      
-      return(ggplot())
+      return(plotPred())
     })
     
+    # Calcul du plot #
     plotPred <- reactive({ # objet contenant le graphique de l'extrapolation temporelle (glmmTMB)
       if(is.null(input$doPred)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plot()
         return(NULL)
@@ -1088,7 +1090,61 @@ if(interactive()){
       }
       
       isolate({ # evite de recalculer la cartographie lorsque l'utilisateur modifie simplement les valeurs de sliderAnnee et Phenotype
+        if(is.null(input$selectedColumnPlotPred) | is.null(input$timeRange)){
+          return(NULL)
+        }
+        
+        timeRange=c(input$timeRange[1]:input$timeRange[2])
+        
         d=data()
+        d$commune=formatCommune(d,"commune") # homogeneisation du noms des communes
+        d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
+          if(!is.na(x)){
+            if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+          }else{return(NA)}
+        })
+
+        # couples communes / numero de departement du fichier importe
+        obsCD=paste(d$commune,d$numero_departement,sep=" * ")
+        # couples communes / numero de departement du fichier gouvernemental
+        dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ")
+        missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant a des couples commune*numero_departement inconnus
+
+        rmLines=names(table(c(missingGPS, # lignes a retirer car indisposees a la modelisation
+                              which(is.na(d$modalite) |
+                                      is.na(d[,input$selectedColumnPlotPred]) |
+                                      d$modalite!="TNT" |
+                                      !check.numeric(d[,input$selectedColumnPlotPred]) | # AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
+                                      !d$annee%in%timeRange))))
+        d=d[-as.numeric(rmLines),]
+        
+        # Appariement des regions #
+        region=rep(NA,nrow(d))
+        for(i in 1:nrow(d)){
+          region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
+        }
+        d$region=region
+        
+        d$t=d$annee-timeRange[1]
+        d$region=as.factor(d$region)
+        d$y=cbind(as.numeric(d[,input$selectedColumnPlotPred]),
+                  100-as.numeric(d[,input$selectedColumnPlotPred]))
+        
+        d=d[,which(colnames(d)%in%c("t","region","y"))] # AJOUTER UN EFFET DE L'ESSAI ? CAR PARFOIS DES REPETITIONS DE TEMOINS
+
+        print("===========")
+        print("d:")
+        print(summary(d))
+        print(head(d))
+        
+        model=glmmTMB(y~t*region,
+                      ziformula=~t,
+                      data=d,
+                      family=binomial)
+        
+        print(summary(model))
+        
+        return(ggplot()+ggtitle(paste(paste(timeRange,collapse=" "),input$selectedColumnPlotPred,sep=" : ")))
       })
     })
     
