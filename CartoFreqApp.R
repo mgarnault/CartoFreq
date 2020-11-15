@@ -31,8 +31,8 @@ library("varhandle")
 library("spaMM")
 # install.packages("scatterpie")
 library("scatterpie")
-# install.packages("glmmTMB")
-library("glmmTMB")
+# install.packages("car")
+library("car")
 
 
 
@@ -237,7 +237,7 @@ if(interactive()){
                                        uiOutput("pluriannual"),
                                        uiOutput("phenotypeNameStats"),
                                        uiOutput("yearNameStats"),
-                                       uiOutput("tableStats"),
+                                       tableOutput("tableStats"),
                                        hr(),
                                        uiOutput("columnChoiceErr"),
                                        htmlOutput("errors")),
@@ -255,6 +255,7 @@ if(interactive()){
                       conditionalPanel(condition="input.tabs==3",
                                        uiOutput("columnChoicePlotPred"),
                                        uiOutput("sliderY"),
+                                       tableOutput("resultSummary"),
                                        hr(),
                                        uiOutput("predGO"))),
                     
@@ -297,6 +298,8 @@ if(interactive()){
     })
     
     observeEvent(input$file1,{
+      estimatePred(NULL) # Efface le tableau des estimation des modèles dynamiques GLM de l'onglet "Prédiction"
+      
       if(is.null(data())){
         removeTab(inputId="tabs",target="2")
         removeTab(inputId="tabs",target="3")
@@ -705,22 +708,22 @@ if(interactive()){
     
     
     ## Choix de l'utilisateur pour enregistrer la carte au format PDF ##
-    output$cartoSave <- renderUI({ # affiche le bouton d'exportation du plot()
-      if(is.null(plot())){
+    output$cartoSave <- renderUI({ # affiche le bouton d'exportation du plotCarto()
+      if(is.null(plotCarto())){
         return(NULL)
       }
       
       return(actionButton("exportCartography","Exporter la carte au format PDF",icon("download")))
     })
 
-    observeEvent(input$exportCartography,{ # permet d'enregistrer le plot() lors du clic-bouton
+    observeEvent(input$exportCartography,{ # permet d'enregistrer le plotCarto() lors du clic-bouton
       savePath=choose.dir()
       if(is.na(savePath)){
         return(NULL)
       }else{
         pdf(paste0(savePath,"\\",plottedPhenotype(),"_",plottedYear(),"_",plottedModality(),
                    "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
-        print(plot()[["toSave"]])
+        print(plotCarto()[["toSave"]])
         dev.off()
       }
     })
@@ -807,11 +810,11 @@ if(interactive()){
     
     
     ## Création de la carte ##
-    plot <- reactive({ # objet contenant la cartographie (glmm + krigeage)
-      if(is.null(input$do)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plot()
+    plotCarto <- reactive({ # objet contenant la cartographie (glmm + krigeage)
+      if(is.null(input$do)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
         return(NULL)
       }
-      if(input$do==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plot()
+      if(input$do==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
         return(NULL)
       }
       
@@ -975,11 +978,11 @@ if(interactive()){
     
     ## Affichage de la carte ##
     output$graph <- renderPlot({ # affiche la cartographie
-      if(is.null(plot())){ 
+      if(is.null(plotCarto())){ 
         return(NULL)
       }
       
-      return(plot()[["toPlot"]])
+      return(plotCarto()[["toPlot"]])
     }, height=750, width=750)
     
     
@@ -1074,18 +1077,26 @@ if(interactive()){
     
     
     
-    ## Affichage du graphique des predictions ##
+    ## Affichage du graphique des predictions et du summary du modèle ##
     # Rendu du plot #
     output$graphPred <- renderPlot({
       return(plotPred())
     })
     
-    # Calcul du plot #
-    plotPred <- reactive({ # objet contenant le graphique de l'extrapolation temporelle (glmmTMB)
-      if(is.null(input$doPred)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plot()
+    estimatePred <- reactiveVal("")
+    output$resultSummary <- renderTable({
+      if(is.null(plotPred())){
         return(NULL)
       }
-      if(input$doPred==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plot()
+      return(estimatePred())
+    })
+    
+    # Calcul du plot #
+    plotPred <- reactive({ # objet contenant le graphique de l'extrapolation temporelle (glmmTMB)
+      if(is.null(input$doPred)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
+        return(NULL)
+      }
+      if(input$doPred==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
         return(NULL)
       }
       
@@ -1126,26 +1137,78 @@ if(interactive()){
         d$region=region
         
         d$t=d$annee-timeRange[1]
-        d$region=as.factor(d$region)
+        d[which(d[,input$selectedColumnPlotPred]==0),input$selectedColumnPlotPred]=1
+        d[which(d[,input$selectedColumnPlotPred]==100),input$selectedColumnPlotPred]=99
         d$y=cbind(as.numeric(d[,input$selectedColumnPlotPred]),
                   100-as.numeric(d[,input$selectedColumnPlotPred]))
+        d=d[,which(colnames(d)%in%c("t","region","y"))]
         
-        d=d[,which(colnames(d)%in%c("t","region","y"))] # AJOUTER UN EFFET DE L'ESSAI ? CAR PARFOIS DES REPETITIONS DE TEMOINS
-
-        print("===========")
-        print("d:")
-        print(summary(d))
-        print(head(d))
+        saveRDS(d,"test_d.rds")
+        # d=readRDS("test_d.rds")
         
-        model=glmmTMB(y~t*region,
-                      ziformula=~t,
-                      data=d,
-                      family=binomial)
+        timeOcc=table(d$t,d$region)
+        timeOcc[which(timeOcc!=0)]=1
+        keepReg=names(colSums(timeOcc)[which(colSums(timeOcc)>1)])
+        d=d[which(d$region%in%keepReg),]
+        d$region=as.factor(d$region)
+        basicLevels=names(table(d$region))
+        changedLevels=basicLevels[c(1:(length(basicLevels)-2),
+                                    length(basicLevels),
+                                    (length(basicLevels)-1))]
         
-        print(summary(model))
+        d1=d
+        contrasts(d1$region)="contr.sum"
+        model1=glm(y~region*t,
+                   data=d1,
+                   family=quasibinomial("logit"))
+        estimates1=summary(model1)$coefficients[-1,c(1,2,4)]
+        estimates1=estimates1[grep("t",rownames(estimates1)),]
+        RN1=rownames(estimates1)
+        RN1=sub(":t","",RN1)
+        RN1=basicLevels[as.numeric(str_extract(RN1,"[0-9]+"))]
+        RN1[which(is.na(RN1))]="FRANCE"
+        rownames(estimates1)=RN1
+        
+        d2=d
+        d2$region=factor(d2$region,
+                         levels=changedLevels)
+        contrasts(d2$region)="contr.sum"
+        model2=glm(y~region*t,
+                  data=d2,
+                  family=quasibinomial("logit"))
+        estimates2=summary(model2)$coefficients[-1,c(1,2,4)]
+        estimates2=estimates2[grep("t",rownames(estimates2)),]
+        RN2=rownames(estimates2)
+        RN2=sub(":t","",RN2)
+        RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
+        RN2[which(is.na(RN2))]="FRANCE"
+        rownames(estimates2)=RN2
+        
+        estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
+        colnames(estimates)=c("Estimation","Ecart-type","P-value")
+        estimates=estimates[!grepl(".1",rownames(estimates)),]
+        
+        estimates$"Signif."=sapply(estimates$"P-value",function(x){
+          if(x<=0.001){return("***")}
+          else if(x<=0.025){return("**")}
+          else if(x<=0.05){return("*")}
+          else if(x<=0.1){return(".")}
+          else{return("")}
+        })
+        estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
+        estimatePred(estimates)
+        
+        # Anova(model1,"III") # A AJOUTER ?
         
         return(ggplot()+ggtitle(paste(paste(timeRange,collapse=" "),input$selectedColumnPlotPred,sep=" : ")))
       })
+    })
+    
+    # Slider prédiction t+X #
+    output$tPredict <- renderUI({
+      if(is.null(plotPred())){
+        return(NULL)
+      }
     })
     
     
