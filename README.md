@@ -118,6 +118,8 @@ L'indice de confiance correspond au nombre minimal de point observé par région
 L'application réalise automatiquement une sélection de données : sous-plage temporelle d'intérêt (cible la phase d'évolution de la résistance, *i.e.* avec suffisament de fréquences différentes de 0% et 100% annuellement en France), et régions d'intérêt (cible les régions avec une fréquence de monitoring dans le temps adéquate, *i.e.* avec suffisament de points observés par an avec des fréquences différentes de 0% et de 100%).
 Le tableau qui s'affiche sur le panneau de droite correspond à l'estimation des taux de croissance en échelle logit : la ligne **FRANCE** correspond au taux de croisasnce global national; les autres lignes correspondent au taux de croissance régionnaux relativement au taux national. Les taux de croissance régionnaux absolus s'obtiennent en sommant le taux de croissance national au taux relatif régionnaux. Si la valeur est positive la fréquence augmente, si la valeur est négative la fréquence diminue.
 
+
+
 Exemple : Si on a +0.86 (\*\*\*) en FRANCE, -0.5 () dans REG1 et +0.32 (\*) dans REG2, cela signifie que la fréuqnce augmente de manière significative en FRANCE (+0.86), que la dynamique de la fréquence dans REG1 ne diffère pas significativement de cette tendance nationale (+0.36), que la dynamique de la fréquénce dans la REG2 diffère significativement de cette tendance national (+1.18). 
 
 #### > Ajout de variables explicatives régionales.
