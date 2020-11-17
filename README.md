@@ -107,7 +107,17 @@ Après avoir sélectionné le JDD pluri-annuel lors de l'importation d'un fichie
 #### > Choisir la fréquence à étudier.
 
 #### > Choisir la plage temporelle étudiée.
-Utiliser le slider pour sélectionner la sous-plage temporelle sur lequel le modèle dynamique va estimer les taux de croissance.
+Utiliser le slider pour sélectionner la plage temporelle sur lequel le modèle dynamique va estimer les taux de croissance. Plus la plage temporelle sélectionnée sera grande plus l'estimation sera robuste.
 
-#### > Ajout de varibles explicatives régionales.
+:warning: ATTENTION à selectionner une plage temporelle "homogène" du point de vue de la dynamique de la fréquence (évolution strictement positive, ou strictement négative, ou stagnante). En effet, le modèle estime des taux de croissance constants dans le temps, il ne fittera donc pas bien les courbes en cloche par exemple (*i.e.* avec une phase de croissance, puis une phase de décroissance). Dans les cas où il est possible de ditinguer plusieurs phases dans l'évolution de la fréquence, il fortement recommandé de faire autant d'analyses que l'on distingue de phase d'évolution.
+
+#### > Choisir l'indice de confiance souhaité.
+L'indice de confiance correspond au nombre minimal de point observé par région et par an pour faire l'estimation des dynamiques.
+
+#### > Lancer l'analyse : cliquer sur le bouton *Soumettre*.
+L'application réalise automatiquement une sélection de données : sous-plage temporelle d'intérêt (cible la phase d'évolution de la résistance, *i.e.* avec suffisament de fréquences différentes de 0% et 100% annuellement en France), et régions d'intérêt (cible les régions avec une fréquence de monitoring dans le temps adéquate, *i.e.* avec suffisament de points observés par an avec des fréquences différentes de 0% et de 100%).
+Le tableau qui s'affiche sur le panneau de droite correspond à l'estimation des taux de croissance en échelle logit : la ligne **FRANCE** correspond au taux de croisasnce global national; les autres lignes correspondent au taux de croissance régionnaux relativement au taux national. Les taux de croissance régionnaux absolus s'obtiennent en sommant le taux de croissance national au taux relatif régionnaux. Si la valeur est positive la fréquence augmente, si la valeur est négative la fréquence diminue.
+Exemple : Si on a +0.86 (\*\*\*) en FRANCE, -0.5 () dans REG1 et +0.32 (\*) dans REG2, cela signifie que la fréuqnce augmente de manière significative en FRANCE (+0.86), que la dynamique de la fréquence dans REG1 ne diffère pas significativement de cette tendance nationale (+0.36), que la dynamique de la fréquénce dans la REG2 diffère significativement de cette tendance national (+1.18). 
+
+#### > Ajout de variables explicatives régionales.
 Une fois l'importation des fichiers terminée, re-soumettre l'analyse.
