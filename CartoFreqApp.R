@@ -31,8 +31,7 @@ library("varhandle")
 library("spaMM")
 # install.packages("scatterpie")
 library("scatterpie")
-# install.packages("car")
-library("car")
+
 
 
 
@@ -120,7 +119,7 @@ fillMAP=function(predict,coords,color.range){
 
 
 ## Fonction qui permet de dessiner les cartographies ##
-MakePlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV){ 
+MakeCartoPlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV){ 
   p=ggplot() # creation du plot par phenotype et par annee
   
   p=p+scale_x_continuous(limits=c(ext_FR$range[1]/plotRatio,ext_FR$range[2]/plotRatio),expand=c(0,0)) # dimension de l'axe x
@@ -128,15 +127,7 @@ MakePlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRatio,ext
   p=p+coord_equal()
   
   p=p+geom_point(aes(x=CX/plotRatio,y=CY),data=krig,color=krig$Pred,pch=15,size=1) # arriere-plan couleur indiquant les frequences extrapolees par krigeage
-  
-  print(d2)
-  print(summary(d2))
-  print(dim(d2))
-  print(which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100")))
-  print(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))])
-  print(apply(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))],
-              2,
-              function(x){!all(x==0)}))
+
   colorLegend=colorLegend[as.numeric(which(apply(d2[which(colnames(d2)%in%c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"))],
                                                  2,
                                                  function(x){!all(x==0)})))]
@@ -154,23 +145,70 @@ MakePlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRatio,ext
             axis.ticks.y=element_blank(),
             axis.text.y=element_blank())
   
-  p1=p+geom_polygon(aes(x=X/plotRatio,y=Y),data=ext_FRplot,fill="white",color="white",size=0) # delimination de la France
+  p=p+geom_polygon(aes(x=X/plotRatio,y=Y),data=ext_FRplot,fill="white",color="white",size=0) # delimination de la France
+  
+  p1=p
   p1=p1+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),data=regionsplot,fill="NA",color="black",size=1) # delimination des regions
   p1=p1+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),data=regionsplotNOBSV,fill="grey50",color="black",size=1) # grisage des regions non observees a l'annee du graphique
   p1=p1+geom_point(aes(x=longitude/plotRatio,y=latitude),data=d2,color="black",pch=20,size=10) # arriere-plan des points de couleur des frequences observees
   p1=p1+geom_scatterpie(aes(x=longitude/plotRatio,y=latitude,r=0.08),data=d2,cols=c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"),color=NA)
-  p1=p1+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.25,na.rm=T))/plotRatio,y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),label=paste0(phenotype," (",annee," - ",modalite,")"),size=10) # titre annee
+  p1=p1+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.25,na.rm=T))/plotRatio,y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),label=paste0(phenotype," (",annee," - ",modalite,")"),size=8) # titre annee
   
-  p2=p+geom_polygon(aes(x=X/plotRatio,y=Y),data=ext_FRplot,fill="white",color="white",size=0) # delimination de la France
+  p2=p
   p2=p2+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),data=regionsplot,fill="NA",color="black",size=.75) # delimination des regions
   p2=p2+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),data=regionsplotNOBSV,fill="grey50",color="black",size=.75) # grisage des regions non observees a l'annee du graphique
   p2=p2+geom_point(aes(x=longitude/plotRatio,y=latitude),data=d2,color="black",pch=20,size=6) # arriere-plan des points de couleur des frequences observees
   p2=p2+geom_scatterpie(aes(x=longitude/plotRatio,y=latitude,r=0.08),data=d2,cols=c("F0.to.25","F26.to.50","F51.to.75","F76.to.100"),color=NA)
-  p2=p2+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.25,na.rm=T))/plotRatio,y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),label=paste0(phenotype," (",annee," - ",modalite,")"),size=6) # titre annee
+  p2=p2+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.25,na.rm=T))/plotRatio,y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),label=paste0(phenotype," (",annee," - ",modalite,")"),size=5) # titre annee
   
   return(list(toPlot=p1,toSave=p2))
 }
 
+
+## Fonction qui permet de créer une liste de plot correspondant à la prédiction des fréquences au temps t+1 à t+5 ##
+MakePredictionPlots=function(namePhenotype,yearRange,color.range,plotRatio,ext_FR,regionsplot,regionsplotPred,predicts,confidenceIndex){
+  pList=list()
+  count=0
+  
+  for(Time in min(predicts$t):max(predicts$t)){
+    count=count+1
+    
+    regionsplotPred$Color=sapply(regionsplotPred$Region,function(x){
+      freq=predicts$Prediction[which(predicts$region==x & predicts$t==Time)]
+      return(color.range[freq])
+    })
+    
+    p=ggplot()
+    p=p+scale_x_continuous(limits=c(ext_FR$range[1]/plotRatio,ext_FR$range[2]/plotRatio),expand=c(0,0)) # dimension de l'axe x
+    p=p+scale_y_continuous(limits=c(ext_FR$range[3],ext_FR$range[4]),expand=c(0,0)) # dimension de l'axe y
+    p=p+coord_equal()
+    p=p+theme(panel.background=element_blank(), # arriere-plan blanc
+              legend.position="none", # pas de legende
+              plot.margin=margin(c(0,0,0,0),unit="cm"), # pas de marges (respect du ratio X/Y France)
+              axis.line.x=element_blank(), # pas de ligne representant l'axe des x
+              axis.title.x=element_blank(), # pas de titre a l'axe des x
+              axis.ticks.x=element_blank(), # pas de graduation sur l axe des x
+              axis.text.x=element_blank(), # pas d'annotation sur l'axe des x
+              axis.line.y=element_blank(), # de meme pour l'axe y ....
+              axis.title.y=element_blank(),
+              axis.ticks.y=element_blank(),
+              axis.text.y=element_blank())
+    p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region)
+                      ,data=regionsplot,fill="grey",color="black",size=.75) # grisage des regions non observees
+    p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),
+                       data=regionsplotPred,fill=regionsplotPred$Color,color="black",size=.75) # affichage de la prédiction dans les régions monitorées
+    p=p+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.175,na.rm=T))/plotRatio,
+                        y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),
+                    label=paste0("Prédiction ",namePhenotype," en ",(max(yearRange)+count),"\n",
+                                 "(Indice de confiance = ",confidenceIndex,"/10)","\n",
+                                 "(Apprentissage sur ",min(yearRange)," - ",max(yearRange),")"),size=5) # titre 
+    
+    pList[[count]]=p
+    names(pList)[count]=as.character(Time)
+  }
+  
+  return(pList)
+}
 
 
 
@@ -223,7 +261,7 @@ if(interactive()){
   ui <- fluidPage(useShinyjs(),
                   useSweetAlert(),
                   position="left",
-                  div(HTML("<h1>Outil cartographique <em>spFr</em></h1>")), # Titre
+                  div(HTML("<h1>Outil <em>CartoFreq</em></h1>")), # Titre
                   sidebarLayout(
                     
                     ## Panel proposant l'importation + corrections ##
@@ -255,9 +293,11 @@ if(interactive()){
                       conditionalPanel(condition="input.tabs==3",
                                        uiOutput("columnChoicePlotPred"),
                                        uiOutput("sliderY"),
+                                       uiOutput("sliderConfidenceIndex"),
                                        tableOutput("resultSummary"),
                                        hr(),
-                                       uiOutput("predGO"))),
+                                       uiOutput("predGO"),
+                                       uiOutput("cartoPredSave"))),
                     
                     ## Panels affichant le data ou les cartes ##
                     mainPanel(
@@ -298,8 +338,15 @@ if(interactive()){
     })
     
     observeEvent(input$file1,{
-      estimatePred(NULL) # Efface le tableau des estimation des modèles dynamiques GLM de l'onglet "Prédiction"
-      
+      plotPred(NULL) # Efface le contenu du graphique que prédiction GLM
+      plotCarto(NULL) # Efface le contenu du graphique d'extrapolation des fréquence GLMM
+      estimateSummary(NULL) # Efface le tableau des estimation des modèles dynamiques GLM de l'onglet "Prédiction"
+      predictionTable(NULL) # Efface le contenu du tableau des fréquences prédites par l'analyse dynamique par GLM de l'onglet "Prédiction"
+      annualStatsTable(NULL) # Efface le contenu du tableau des statistiques annuelles
+      selectedYearStats(NULL)
+      selectedPhenotypeStats(NULL)
+      showStats(NULL)
+
       if(is.null(data())){
         removeTab(inputId="tabs",target="2")
         removeTab(inputId="tabs",target="3")
@@ -332,15 +379,16 @@ if(interactive()){
       
       return(prettySwitch("showStats","Afficher les statistiques annuelles",fill=TRUE))
     })
+    showStats <- reactiveVal(NULL)
+    observeEvent(input$showStats,{
+      showStats(input$showStats)
+    })
     
     output$phenotypeNameStats <- renderUI({ # affiche le champ pour selectionner le Phenotype
-      if(is.null(data())){
+      if(is.null(showStats())){
         return(NULL)
       }
-      if(is.null(input$showStats)){
-        return(NULL)
-      }
-      if(!input$showStats){
+      if(!showStats()){
         return(NULL)
       }
 
@@ -348,89 +396,96 @@ if(interactive()){
       return(selectInput("selectedPhenotypeStats","Fréquence :",colnames(d)[
         which(!colnames(d)%in%c(mandatoryVar,accessoryVar))]))
     })
-    
+    selectedPhenotypeStats <- reactiveVal(NULL)
+    observeEvent(c(input$selectedPhenotypeStats,input$showStats),{
+      selectedPhenotypeStats(input$selectedPhenotypeStats)
+    })
+
     output$yearNameStats <- renderUI({ # affiche le champ pour selectionner l'Annee
-      if(is.null(data())){
+      if(is.null(showStats())){
         return(NULL)
       }
-      if(is.null(input$showStats)){
+      if(!showStats()){
         return(NULL)
       }
-      if(!input$showStats){
-        return(NULL)
-      }
-      if(is.null(input$selectedPhenotypeStats)){
+      if(is.null(selectedPhenotypeStats())){
         return(NULL)
       }
       
       d=data()
-      if(!"annee"%in%colnames(d)){
-        return(" ")
-      }else{
+      if(input$pluriY | "annee"%in%colnames(d)){
         return(selectInput("selectedYearStats","Année :",
-                           names(table(d$annee[which(!is.na(d[,input$selectedPhenotypeStats]))]))))
+                           names(table(d$annee[which(!is.na(d[,selectedPhenotypeStats()]))]))))
+      }else{
+        selectedYearStats(NULL)
+        return(NULL)
       }
     })
+    selectedYearStats <- reactiveVal(NULL)
+    observeEvent(c(input$selectedYearStats,input$showStats),{
+      selectedYearStats(input$selectedYearStats)
+    })
     
+    annualStatsTable <- reactiveVal(NULL)
     output$tableStats <- renderTable({ # Statistiques annuelles des frequences : nationales + regionales
-      if(is.null(data())){
+      if(is.null(showStats())){
         return(NULL)
       }
-      if(is.null(input$showStats)){
-        return(NULL)
-      }
-      if(!input$showStats){
-        return(NULL)
-      }
-      if(is.null(input$selectedPhenotypeStats) | is.null(input$selectedYearStats)){
+      if(!showStats()){
         return(NULL)
       }
       
-      isolate({
-        d=data()
-        d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-          if(!is.na(x)){
-            if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-          }else{return(NA)}
-        })
-        
-        d$region=sapply(d$numero_departement,function(x){
-          if(!is.na(x)){
-            if(x%in%deptReg$Departement){
-              return(deptReg$Region[which(deptReg$Departement==x)])
-            }else{
-              return(NA)
-            }
-          }else{
-            return(NA)
-          }
-        })
-        
-        d=d[which(check.numeric(d[,input$selectedPhenotypeStats]) &
-                    !is.na(d[,input$selectedPhenotypeStats])),]
-        d[,input$selectedPhenotypeStats]=as.numeric(d[,input$selectedPhenotypeStats])
-
-        if(input$pluriY | "annee"%in%colnames(d)){
-          d=d[which(d$annee==input$selectedYearStats),]
-          if(dim(d)[1]==0){
-            return(NULL)
-          }
-        }
-        
-        out=aggregate(d[,input$selectedPhenotypeStats],
-                      list(d$region),
-                      "mean")
-        out=data.frame(cbind(out,as.numeric(table(d$region))))
-
-        FRA=mean(d[,input$selectedPhenotypeStats])
-        colnames(out)=c("Région",input$selectedPhenotypeStats,"n")
-        out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
-        out[,input$selectedPhenotypeStats]=as.numeric(out[,input$selectedPhenotypeStats])
-
-        return(out)
-      })
+      return(annualStatsTable())
     })
-    
+    observeEvent(c(selectedPhenotypeStats(),
+                   selectedYearStats()),{
+                     if(is.null(selectedPhenotypeStats())){
+                       return(NULL)
+                     }
+
+                     d=data()
+                     d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
+                       if(!is.na(x)){
+                         if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+                       }else{return(NA)}
+                     })
+                     
+                     d$region=sapply(d$numero_departement,function(x){
+                       if(!is.na(x)){
+                         if(x%in%deptReg$Departement){
+                           return(deptReg$Region[which(deptReg$Departement==x)])
+                         }else{
+                           return(NA)
+                         }
+                       }else{
+                         return(NA)
+                       }
+                     })
+                     
+                     d=d[which(check.numeric(d[,selectedPhenotypeStats()]) &
+                                 !is.na(d[,selectedPhenotypeStats()])),]
+                     d[,selectedPhenotypeStats()]=as.numeric(d[,selectedPhenotypeStats()])
+                     
+                     if(!is.null(selectedYearStats())){
+                       d=d[which(d$annee==selectedYearStats()),]
+                       if(dim(d)[1]==0){
+                         return(NULL)
+                       }
+                     }
+                     
+                     out=aggregate(d[,selectedPhenotypeStats()],
+                                   list(d$region),
+                                   "mean")
+                     out=data.frame(cbind(out,as.numeric(table(d$region))))
+                     
+                     FRA=mean(d[,selectedPhenotypeStats()])
+                     colnames(out)=c("Région",selectedPhenotypeStats(),"n")
+                     out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
+                     out[,selectedPhenotypeStats()]=as.numeric(out[,selectedPhenotypeStats()])
+                     
+                     annualStatsTable(out)
+                   })
+
     
     
     ## Permet à l'utilisateur d'indiquer si le JDD est pluri-annuel ##
@@ -455,7 +510,8 @@ if(interactive()){
           removeTab(inputId="tabs",target="3")
         }else{
           insertTab(inputId="tabs",
-                    tabPanel(title=h4("Prédiction"),value="3",plotOutput("graphPred")),
+                    tabPanel(title=h4("Prédiction"),value="3",fluidRow(column(12,align="center",uiOutput("tPredict")),
+                                                                       plotOutput("graphPred"))),
                     target="2",
                     position="after")
         }
@@ -534,13 +590,14 @@ if(interactive()){
                    sapply(Q$code_postal,function(x){substr(x,1,2)}),
                    sep=" * ")
         unkwnCD=unique(obsCD[which(!obsCD%in%dtCD)]) # liste des couples manquants
-        
+
         if(length(unkwnCD)>0){ # il existe des couples "communes * numero de departement" inconnus => pas d'affiliation GPS possible
-          unkwnCDLines=sapply(unkwnCD,function(x){which(obsCD==x)}) # lignes du fichier importe correspondant a des couples manquants
+          unkwnCDLines=lapply(unkwnCD,function(x){which(obsCD==x)}) # lignes du fichier importe correspondant a des couples manquants
+          names(unkwnCDLines)=unkwnCD
           unkwnCDMessages=sapply(c(1:length(unkwnCDLines)),function(x){paste0( # liste des couples d'erreurs + lignes correspondantes
-            names(unkwnCDLines)[x]," [ligne(s) : ",paste((as.numeric(unlist(unkwnCDLines[x]))+1),collapse=" "),"]"
+            names(unkwnCDLines)[x]," [ligne(s) : ",paste((as.numeric(unkwnCDLines[[x]])+1),collapse=" "),"]"
           )})
-          
+
           return(paste0("<p>La colonne \"commune\" contient ",length(which(is.na(d$commune)))," NA (",
                         round((length(which(is.na(d$commune)))/nrow(d))*100,2),"%).<br><br></p>
                         <p align=\"justify\">Veuillez corriger à la main dans le fichier
@@ -593,31 +650,31 @@ if(interactive()){
         
       # Erreurs liees au frequences de resistance ou aux années (categorie par defaut) #
       }else{
-        unkwnFrequency=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))])) # Fréquences/Années qui ne sont pas des valeur numériques
+        unkwnValue=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))])) # Fréquences/Années qui ne sont pas des valeur numériques
         
         memory=d[,currentCol]
-        if(length(unkwnFrequency)>0){ # Transformation des fréquences/années en valeurs numériques
-          d[,currentCol][which(!check.numeric(d[,currentCol]))]=NA # Evite de générer un message d'erreur
+        if(length(unkwnValue)>0){ # Transformation des fréquences/années en valeurs numériques
+          d[,currentCol][which(!check.numeric(d[,currentCol]))]=NA # Evite de générer un message d'erreur avec le as.numeric() qui suit
         }
         d[,currentCol]=as.numeric(d[,currentCol])
         
         if(currentCol!="annee"){
-          unkwnFrequency=c(unkwnFrequency, # Fréquences qui sont des valeurs numériques <0 ou >100
+          unkwnValue=c(unkwnValue, # Fréquences qui sont des valeurs numériques <0 ou >100
                            d[,currentCol][
                              which(d[,currentCol][which(check.numeric(d[,currentCol]))]>100 |
                                      d[,currentCol][which(check.numeric(d[,currentCol]))]<0)
                            ])
         }
         
-        unkwnFrequency=c(unkwnFrequency, # Fréquences/Années qui ne sont pas des entiers
+        unkwnValue=c(unkwnValue, # Fréquences/Années qui ne sont pas des entiers
                          d[,currentCol][
                            which(d[,currentCol]!=round(d[,currentCol]))
                          ])
         
-        unkwnMessages=sapply(unkwnFrequency,function(x){ # liste des fréquences/années à erreur avec leurs lignes correspondantes dans le fichier importé
+        unkwnMessages=sapply(unkwnValue,function(x){ # liste des fréquences/années à erreur avec leurs lignes correspondantes dans le fichier importé
           paste0(x," [ligne(s) : ",paste((which(memory==x)+1),collapse=" "),"]")})
         
-        if(length(unkwnFrequency)!=0){
+        if(length(unkwnValue)!=0){
           return(paste0("<p>La colonne \"",currentCol,"\" contient ",length(which(is.na(d[,currentCol])))," NA (",
                         round((length(which(is.na(d[,currentCol])))/nrow(d))*100,2),"%).<br><br></p>
                         <p align=\"justify\">Veuillez corriger/supprimer à la main dans le fichier 
@@ -644,13 +701,12 @@ if(interactive()){
     
     ## Choix de l'utilisateur pour la fréquence cartographiée ##
     plottedPhenotype <- reactiveVal("") # variable memoire stockant le nom du Phenotype cartographie
-    
     output$columnChoicePlot <- renderUI({ # affiche une liste deroulante avec les Phenotypes du fichier importe (colonnes autres que mandatoryVar & accessoryVar)
       if(is.null(data())){
         return(NULL)
       }
       
-      return(selectInput("selectedColumnPlot","Fréquence :",colnames(data())[
+      return(selectInput("selectedColumnPlot","Fréquence représentée :",colnames(data())[
         which(!colnames(data())%in%c(mandatoryVar,accessoryVar))]))
     })
     
@@ -658,7 +714,6 @@ if(interactive()){
     
     ## Choix de l'utilisateur pour l'année cartographiée ##
     plottedYear <- reactiveVal("") # variable memoire stockant le nom de l'Annee cartographiee
-    
     output$yearName <- renderUI({ # affiche le champ pour selectionner l'Annee
       if(is.null(data())){
         return(NULL)
@@ -672,7 +727,7 @@ if(interactive()){
       
       d=data()
       if(input$pluriY | "annee"%in%colnames(d)){
-        return(selectInput("year","Année :",
+        return(selectInput("year","Année représentée :",
                            names(table(d$annee[which(!is.na(d[,input$selectedColumnPlot]))]))))
       }else{
         return(textInput("year","Année :"))
@@ -683,7 +738,6 @@ if(interactive()){
     
     ## Choix de l'utilisateur pour la modalité cartographiée TR / TNT / All=TR+TNT ##
     plottedModality <- reactiveVal("") # variable memoire stockant le nom de la Modalite cartographiee
-    
     output$modalityChoicePlot <- renderUI({
       if(is.null(data())){
         return(NULL)
@@ -700,7 +754,7 @@ if(interactive()){
       }
       modalities=table(d$modalite)
       
-      return(selectInput("selectedModalityPlot","Modalité :",
+      return(selectInput("selectedModalityPlot","Modalité représentée :",
                          paste0(c(names(modalities),"All"),
                                 " (n=",c(as.numeric(modalities),nrow(d)),")")))
     })
@@ -810,168 +864,156 @@ if(interactive()){
     
     
     ## Création de la carte ##
-    plotCarto <- reactive({ # objet contenant la cartographie (glmm + krigeage)
-      if(is.null(input$do)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
-        return(NULL)
-      }
-      if(input$do==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
+    plotCarto <- reactiveVal(NULL)
+    
+    observeEvent(input$do,{
+      d=data()
+      
+      if(trimws(gsub("\\s+"," ",input$year))==""){ # renvoie une erreur si l'utilisateur n'a pas renseigne d'Annee
+        sendSweetAlert(session,title="Erreur",
+                       text=paste0("Veuillez renseigner une année."),
+                       type="error")
         return(NULL)
       }
       
-      isolate({ # evite de recalculer la cartographie lorsque l'utilisateur modifie simplement les valeurs de Annee et Phenotype
-        d=data()
-        
-        if(trimws(gsub("\\s+"," ",input$year))==""){ # renvoie une erreur si l'utilisateur n'a pas renseigne d'Annee
-          sendSweetAlert(session,title="Erreur",
-                         text=paste0("Veuillez renseigner une année."),
-                         type="error")
-          return(NULL)
-        }
-        
-        plottedPhenotype(paste0(input$selectedColumnPlot)) # enregistrement du Phenotype cartographie
-        
-        plottedYear(paste0(input$year)) # enregistrement de l'Annee cartographiee
-        
-        chosenModality=substr(input$selectedModalityPlot,1,as.numeric(gregexpr(" ",input$selectedModalityPlot))-1) # Modalite choisie par l'utilisateur pour la cartographie
-        plottedModality(paste0(chosenModality)) # enregistrement de la Modalite cartographiee
-        
-        colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
-        color.range=colfunc(101) # background colors
-        colorLegend=c(color.range[12],color.range[37],color.range[63],color.range[88]) # pie colors
-        
-        
-        # Definition des lignes a retirer pour l'analyse spatiale #
-        d$commune=formatCommune(d,"commune") # homogeneisation du noms des communes
-        d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-          if(!is.na(x)){
-            if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-          }else{return(NA)}
-        })
-        
-        obsCD=paste(d$commune, # couples communes / numero de departement du fichier importe
-                    d$numero_departement,
-                    sep=" * ")
-        dtCD=paste(Q$nom_commune, # couples communes / numero de departement du fichier gouvernemental
-                   sapply(Q$code_postal,function(x){substr(x,1,2)}),
-                   sep=" * ")
-        missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant a des couples commune*numero_departement inconnus
-        
-        rmLines=names(table(c(missingGPS, # lignes a retirer car indisposees a la modelisation spatiale
-                              which(is.na(d$code_essai) | 
-                                      is.na(d$modalite) | 
-                                      is.na(d[,input$selectedColumnPlot]) | 
-                                      !d$modalite%in%usualModilities | 
-                                      !check.numeric(d[,input$selectedColumnPlot]) | # AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
-                                      !d$numero_departement%in%deptReg$Departement))))
-        
-        if(input$pluriY | "annee"%in%colnames(d)){
-          rmLines=names(table(c(rmLines,
-                                which(d$annee!=input$year))))
-          Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))])
-          Ntotal=length(which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))
-        }else{
-          Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot])))])
-          Ntotal=length(which(!is.na(d[,input$selectedColumnPlot])))
-        }
-        
-        
-        # Alerte indiquant le nombre de donnees de frequence retirees pour l'analyse #
-        sendSweetAlert(session,title="Warning",
-                       text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
-                                   "%] des données importées (hors NA) de ",input$selectedColumnPlot," en ",input$year," ont dû être retirées pour 
+      plottedPhenotype(paste0(input$selectedColumnPlot)) # stockage du phenotype cartographié
+      
+      plottedYear(paste0(input$year)) # stockage de l'annee cartographiée
+      
+      chosenModality=substr(input$selectedModalityPlot,1,as.numeric(gregexpr(" ",input$selectedModalityPlot))-1) # Modalite choisie par l'utilisateur pour la cartographie
+      plottedModality(paste0(chosenModality)) # stockage de la modalite cartographiee
+      
+      colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
+      color.range=colfunc(101) # background colors
+      colorLegend=c(color.range[12],color.range[37],color.range[63],color.range[88]) # pie colors
+      
+      
+      # Définition des lignes a retirer pour l'analyse spatiale #
+      d$commune=formatCommune(d,"commune") # homogénéisation du noms des communes
+      d$numero_departement=sapply(d$numero_departement,function(x){ # homogénéisation des numéros de departement
+        if(!is.na(x)){
+          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+        }else{return(NA)}
+      })
+      
+      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples communes / numero de departement du fichier importé
+      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples communes / numero de departement du fichier gouvernemental
+      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant à des couples commune*numero_departement inconnus
+      
+      rmLines=names(table(c(missingGPS, # lignes a retirer car indisposées a la modélisation spatiale
+                            which(is.na(d$code_essai) | 
+                                    is.na(d$modalite) | 
+                                    is.na(d[,input$selectedColumnPlot]) | 
+                                    !d$modalite%in%usualModilities | 
+                                    !check.numeric(d[,input$selectedColumnPlot]) | # !!!!!!!!!! AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
+                                    !d$numero_departement%in%deptReg$Departement))))
+      
+      if(input$pluriY | "annee"%in%colnames(d)){
+        rmLines=names(table(c(rmLines,
+                              which(d$annee!=input$year))))
+        Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))])
+        Ntotal=length(which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))
+      }else{
+        Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot])))])
+        Ntotal=length(which(!is.na(d[,input$selectedColumnPlot])))
+      }
+      
+      
+      # Alerte indiquant le nombre de donnees de frequence retirees pour l'analyse #
+      sendSweetAlert(session,title="Warning",
+                     text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
+                                 "%] des données importées (hors NA) de ",input$selectedColumnPlot," en ",input$year," ont dû être retirées pour 
                               l'analyse spatiale. Causes possibles : présence (i) de NA dans les colonnes code_essai, 
                               modalite, commune ou numero_departement, ou (ii) de couples commune/numero_departement 
                               inconnus (affiliation GPS), ou (iii) de valeurs dans numero_departement inconnus (affiliation regionale),
                               ou (iv) d'autres valeurs que TR et TNT dans la colonne modalite, ou encore (v) de valeurs non numériques 
                               dans la colonne ",input$selectedColumnPlot,". Toutes ces erreurs sont détaillées par colonne dans 
                               l'onglet Tableau."),
-                       type="warning")
-        d=d[-as.numeric(rmLines),]
-        
-        
-        # Debut du processus d'analyse spatiale #
-        show_modal_spinner(spin="orbit",text="Analyse en cours",color="#08298A")
-        
-        
-        # Appariement des regions + coordonnees GPS aux donnees importees #
-        longitude=rep(NA,nrow(d))
-        latitude=rep(NA,nrow(d))
-        region=rep(NA,nrow(d))
-        for(i in 1:nrow(d)){
-          commune=d$commune[i]
-          departement=d$numero_departement[i]
-          longitude[i]=Q$longitude[which(Q$nom_commune==commune & substr(Q$code_postal,1,2)==departement)]
-          latitude[i]=Q$latitude[which(Q$nom_commune==commune & substr(Q$code_postal,1,2)==departement)]
-          region[i]=deptReg$Region[which(deptReg$Departement==as.character(departement))]
-        }
-        d$longitude=longitude
-        d$latitude=latitude
-        d$region=region
-        
-        
-        # Run du modele spatial (estimation) #
-        d$y=cbind(as.numeric(d[,input$selectedColumnPlot]),100-as.numeric(d[,input$selectedColumnPlot]))
-        
-        form=as.formula(
-          paste0("y~1+(1|code_essai)+Matern(1|longitude+latitude)")) # formule du modele du modele pour la cartographie
-        if(chosenModality!="All"){
-          d=d[which(d$modalite==chosenModality),]
-        }
-        model=corrHLfit(form,d,family=binomial()) # modele GLMM
-        predictions=predict(model,binding="fitted") # tableau des frequences predites par le modele spatial
-        # predictions=predictions[!duplicated(predictions),]
-        coordinates=colnames(attr(model,"info.uniqueGeo")[[1]]) # memoire du nom des coordonnees GPS
-        
-        
-        # Run du krigeage spatial (extrapolation) #
-        krig=fillMAP(predictions,coordinates,color.range)
-        if(length(which(krig$CX<min(regions$x,na.rm=T) | krig$CX>max(regions$x,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe X
-          krig=krig[-which(krig$CX<min(regions$x,na.rm=T) | krig$CX>max(regions$x,na.rm=T)),]
-        }
-        if(length(which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe Y
-          krig=krig[-which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)),]
-        }
-        
-        
-        # Nouveau data contenant les frequences observees par essai, representees sous forme de camembert (4 categories: 0-25 25-50 50-75 75-100) #
-        d2=rep(NA,7)
-        names(d2)=c("region","longitude","latitude","F0.to.25","F26.to.50","F51.to.75","F76.to.100")
-        for(j in names(table(d$code_essai))){
-          d2=rbind(d2,c(
-            d$region[which(d$code_essai==j)][1],
-            d$longitude[which(d$code_essai==j)][1],
-            d$latitude[which(d$code_essai==j)][1],
-            length(which(d[which(d$code_essai==j),input$selectedColumnPlot]<=25)),
-            length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>25 & d[which(d$code_essai==j),input$selectedColumnPlot]<=50)),
-            length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>50 & d[which(d$code_essai==j),input$selectedColumnPlot]<=75)),
-            length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>75 & d[which(d$code_essai==j),input$selectedColumnPlot]<=100))
-          ))
-        }
-        d2=d2[-1,]
-        d2=data.frame(d2)
-        for(j in 2:ncol(d2)){d2[,j]=as.numeric(as.character(d2[,j]))}
-        
-        
-        # Definition du ratio X/Y du plot (necessaire pour avoir des camemberts ronds et pas deformes/ovoides)
-        rangeX=ext_FR$range[1]-ext_FR$range[2]
-        rangeY=ext_FR$range[3]-ext_FR$range[4]
-        plotRatio=rangeX/rangeY
-        
-        
-        # Enregistrement des regions monitorees et non monitorees #
-        regionsplotNOBSV=regionsplot[which(!regionsplot$Region%in%names(table(d$region))),]
-        regionsplot$Region=as.factor(regionsplot$Region)
-        regionsplotNOBSV$Region=as.factor(regionsplotNOBSV$Region)
-        
-        
-        # Creation du graphique #
-        p=MakePlot(input$selectedColumnPlot,input$year,chosenModality,color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV)
-        
-        
-        # Fin du processus d'analyse spatiale #
-        remove_modal_spinner()
-        return(p)
-      })
+                     type="warning")
+      d=d[-as.numeric(rmLines),]
+      
+      
+      # Debut du processus d'analyse spatiale #
+      show_modal_spinner(spin="orbit",text="Analyse en cours",color="#08298A")
+      
+      
+      # Appariement des regions + coordonnees GPS aux donnees importees #
+      longitude=rep(NA,nrow(d))
+      latitude=rep(NA,nrow(d))
+      region=rep(NA,nrow(d))
+      for(i in 1:nrow(d)){
+        commune=d$commune[i]
+        departement=d$numero_departement[i]
+        longitude[i]=Q$longitude[which(Q$nom_commune==commune & substr(Q$code_postal,1,2)==departement)]
+        latitude[i]=Q$latitude[which(Q$nom_commune==commune & substr(Q$code_postal,1,2)==departement)]
+        region[i]=deptReg$Region[which(deptReg$Departement==as.character(departement))]
+      }
+      d$longitude=longitude
+      d$latitude=latitude
+      d$region=region
+      
+      
+      # Run du modele spatial (estimation) #
+      d$y=cbind(as.numeric(d[,input$selectedColumnPlot]),100-as.numeric(d[,input$selectedColumnPlot]))
+      
+      form=as.formula(
+        paste0("y~1+(1|code_essai)+Matern(1|longitude+latitude)")) # formule du modele du modele pour la cartographie
+      if(chosenModality!="All"){
+        d=d[which(d$modalite==chosenModality),]
+      }
+      model=corrHLfit(form,d,family=binomial()) # modele GLMM
+      predictions=predict(model,binding="fitted") # tableau des frequences predites par le modele spatial
+      coordinates=colnames(attr(model,"info.uniqueGeo")[[1]]) # memoire du nom des coordonnees GPS
+      
+      
+      # Run du krigeage spatial (extrapolation) #
+      krig=fillMAP(predictions,coordinates,color.range)
+      if(length(which(krig$CX<min(regions$x,na.rm=T) | krig$CX>max(regions$x,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe X
+        krig=krig[-which(krig$CX<min(regions$x,na.rm=T) | krig$CX>max(regions$x,na.rm=T)),]
+      }
+      if(length(which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe Y
+        krig=krig[-which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)),]
+      }
+      
+      
+      # Nouveau data contenant les frequences observees par essai, representees sous forme de camembert (4 categories: 0-25 25-50 50-75 75-100) #
+      d2=rep(NA,7)
+      names(d2)=c("region","longitude","latitude","F0.to.25","F26.to.50","F51.to.75","F76.to.100")
+      for(j in names(table(d$code_essai))){
+        d2=rbind(d2,c(
+          d$region[which(d$code_essai==j)][1],
+          d$longitude[which(d$code_essai==j)][1],
+          d$latitude[which(d$code_essai==j)][1],
+          length(which(d[which(d$code_essai==j),input$selectedColumnPlot]<=25)),
+          length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>25 & d[which(d$code_essai==j),input$selectedColumnPlot]<=50)),
+          length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>50 & d[which(d$code_essai==j),input$selectedColumnPlot]<=75)),
+          length(which(d[which(d$code_essai==j),input$selectedColumnPlot]>75 & d[which(d$code_essai==j),input$selectedColumnPlot]<=100))
+        ))
+      }
+      d2=d2[-1,]
+      d2=data.frame(d2)
+      for(j in 2:ncol(d2)){d2[,j]=as.numeric(as.character(d2[,j]))}
+      
+      
+      # Definition du ratio X/Y du plot (necessaire pour avoir des camemberts ronds et pas deformes/ovoides)
+      rangeX=ext_FR$range[1]-ext_FR$range[2]
+      rangeY=ext_FR$range[3]-ext_FR$range[4]
+      plotRatio=rangeX/rangeY
+      
+      
+      # Enregistrement des regions monitorees et non monitorees #
+      regionsplotNOBSV=regionsplot[which(!regionsplot$Region%in%names(table(d$region))),]
+      regionsplot$Region=as.factor(regionsplot$Region)
+      regionsplotNOBSV$Region=as.factor(regionsplotNOBSV$Region)
+      
+      
+      # Creation du graphique #
+      p=MakeCartoPlot(input$selectedColumnPlot,input$year,chosenModality,color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV)
+      
+      
+      # Fin du processus d'analyse spatiale #
+      remove_modal_spinner()
+      plotCarto(p)
     })
     
     
@@ -1034,23 +1076,21 @@ if(interactive()){
     
     
     
-    ## Selection des donnees par l'utilisateur pour l'analyse predictive regionale ##
+    ## Selection des données par l'utilisateur pour l'analyse predictive regionale ##
     # Liste déroulante des phénotypes disponibles à la prédiction #
     output$columnChoicePlotPred <- renderUI({
       if(is.null(data())){
         return(NULL)
       }
       
-      return(selectInput("selectedColumnPlotPred","Fréquence :",colnames(data())[
-        which(!colnames(data())%in%c(mandatoryVar,accessoryVar))]))
+      d=data()
+      return(selectInput("selectedColumnPlotPred","Fréquence prédite :",colnames(d)[
+        which(!colnames(d)%in%c(mandatoryVar,accessoryVar))]))
     })
     
     # Slider permettant à l'utilisateur de sélectionner les années d'intérêt pour le phénotype choisi #
     output$sliderY <- renderUI({
       if(is.null(data())){
-        return(NULL)
-      }
-      if(is.null(input$pluriY)){
         return(NULL)
       }
       if(is.null(input$selectedColumnPlotPred)){
@@ -1062,12 +1102,21 @@ if(interactive()){
       firstY=min(as.numeric(years))
       lastY=max(as.numeric(years))
       
-      return(sliderInput("timeRange","Années :",
+      return(sliderInput("timeRange","Plage temporelle d'apprentissage :",
                          min=firstY,max=lastY,sep="",
                          value=c(firstY,lastY),
                          ticks=FALSE))
     })
     
+    
+    ## Slider permettant à l'utilisateur de choisir l'indice de confiance souhaité ##
+    output$sliderConfidenceIndex <- renderUI({
+      return(sliderInput(inputId="confidenceIndex",
+                         label="Indice de confiance souhaité :",
+                         min=1,
+                         max=10,
+                         value=1))
+    })
     
     
     ## Bouton permettant de lancer l'analyse dynamique des fréquences ##
@@ -1076,145 +1125,236 @@ if(interactive()){
     })
     
     
-    
-    ## Affichage du graphique des predictions et du summary du modèle ##
-    # Rendu du plot #
-    output$graphPred <- renderPlot({
-      return(plotPred())
-    })
-    
-    estimatePred <- reactiveVal("")
+    ## Rendu du tableau des estimations (summary) du modèle dynamique ##
+    estimateSummary <- reactiveVal(NULL)
     output$resultSummary <- renderTable({
-      if(is.null(plotPred())){
-        return(NULL)
-      }
-      return(estimatePred())
-    })
+      return(estimateSummary())
+    },digits=3)
     
-    # Calcul du plot #
-    plotPred <- reactive({ # objet contenant le graphique de l'extrapolation temporelle (glmmTMB)
-      if(is.null(input$doPred)){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
-        return(NULL)
-      }
-      if(input$doPred==0){ # evite de creer un graphique avant d'avoir clique sur le bouton Soumettre + creer la dependance a input$do pour le refresh de plotCarto()
+    
+    ## Affichage du graphique des prédictions ##
+    # Slider permettant à l'utilisateur de choisir la prédiction à t+X #
+    predictionTable <- reactiveVal(NULL)
+    output$tPredict <- renderUI({
+      if(is.null(predictionTable())){
         return(NULL)
       }
       
-      isolate({ # evite de recalculer la cartographie lorsque l'utilisateur modifie simplement les valeurs de sliderAnnee et Phenotype
-        if(is.null(input$selectedColumnPlotPred) | is.null(input$timeRange)){
-          return(NULL)
-        }
-        
-        timeRange=c(input$timeRange[1]:input$timeRange[2])
-        
-        d=data()
-        d$commune=formatCommune(d,"commune") # homogeneisation du noms des communes
-        d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-          if(!is.na(x)){
-            if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-          }else{return(NA)}
-        })
-
-        # couples communes / numero de departement du fichier importe
-        obsCD=paste(d$commune,d$numero_departement,sep=" * ")
-        # couples communes / numero de departement du fichier gouvernemental
-        dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ")
-        missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant a des couples commune*numero_departement inconnus
-
-        rmLines=names(table(c(missingGPS, # lignes a retirer car indisposees a la modelisation
-                              which(is.na(d$modalite) |
-                                      is.na(d[,input$selectedColumnPlotPred]) |
-                                      d$modalite!="TNT" |
-                                      !check.numeric(d[,input$selectedColumnPlotPred]) | # AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
-                                      !d$annee%in%timeRange))))
-        d=d[-as.numeric(rmLines),]
-        
-        # Appariement des regions #
-        region=rep(NA,nrow(d))
-        for(i in 1:nrow(d)){
-          region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
-        }
-        d$region=region
-        
-        d$t=d$annee-timeRange[1]
-        d[which(d[,input$selectedColumnPlotPred]==0),input$selectedColumnPlotPred]=1
-        d[which(d[,input$selectedColumnPlotPred]==100),input$selectedColumnPlotPred]=99
-        d$y=cbind(as.numeric(d[,input$selectedColumnPlotPred]),
-                  100-as.numeric(d[,input$selectedColumnPlotPred]))
-        d=d[,which(colnames(d)%in%c("t","region","y"))]
-        
-        saveRDS(d,"test_d.rds")
-        # d=readRDS("test_d.rds")
-        
-        timeOcc=table(d$t,d$region)
-        timeOcc[which(timeOcc!=0)]=1
-        keepReg=names(colSums(timeOcc)[which(colSums(timeOcc)>1)])
-        d=d[which(d$region%in%keepReg),]
-        d$region=as.factor(d$region)
-        basicLevels=names(table(d$region))
-        changedLevels=basicLevels[c(1:(length(basicLevels)-2),
-                                    length(basicLevels),
-                                    (length(basicLevels)-1))]
-        
-        d1=d
-        contrasts(d1$region)="contr.sum"
-        model1=glm(y~region*t,
-                   data=d1,
-                   family=quasibinomial("logit"))
-        estimates1=summary(model1)$coefficients[-1,c(1,2,4)]
-        estimates1=estimates1[grep("t",rownames(estimates1)),]
-        RN1=rownames(estimates1)
-        RN1=sub(":t","",RN1)
-        RN1=basicLevels[as.numeric(str_extract(RN1,"[0-9]+"))]
-        RN1[which(is.na(RN1))]="FRANCE"
-        rownames(estimates1)=RN1
-        
-        d2=d
-        d2$region=factor(d2$region,
-                         levels=changedLevels)
-        contrasts(d2$region)="contr.sum"
-        model2=glm(y~region*t,
-                  data=d2,
-                  family=quasibinomial("logit"))
-        estimates2=summary(model2)$coefficients[-1,c(1,2,4)]
-        estimates2=estimates2[grep("t",rownames(estimates2)),]
-        RN2=rownames(estimates2)
-        RN2=sub(":t","",RN2)
-        RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
-        RN2[which(is.na(RN2))]="FRANCE"
-        rownames(estimates2)=RN2
-        
-        estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
-        colnames(estimates)=c("Estimation","Ecart-type","P-value")
-        estimates=estimates[!grepl(".1",rownames(estimates)),]
-        
-        estimates$"Signif."=sapply(estimates$"P-value",function(x){
-          if(x<=0.001){return("***")}
-          else if(x<=0.025){return("**")}
-          else if(x<=0.05){return("*")}
-          else if(x<=0.1){return(".")}
-          else{return("")}
-        })
-        estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
-        estimatePred(estimates)
-        
-        # Anova(model1,"III") # A AJOUTER ?
-        
-        return(ggplot()+ggtitle(paste(paste(timeRange,collapse=" "),input$selectedColumnPlotPred,sep=" : ")))
-      })
+      return(sliderInput(inputId="timeToPredict",
+                         label="Afficher la prédiction à T+... :",
+                         min=1,
+                         max=5,
+                         value=1))
     })
     
-    # Slider prédiction t+X #
-    output$tPredict <- renderUI({
-      if(is.null(plotPred())){
+    # Rendu du plot de prédiction #
+    plotPred <- reactiveVal(NULL)
+    output$graphPred <- renderPlot({
+      return(plotPred())
+    }, height=750, width=750)
+    
+    observeEvent(c(input$timeToPredict,input$doPred),{
+      if(is.null(plotPredList())){
         return(NULL)
+      }
+      if(is.null(input$timeToPredict)){
+        return(NULL)
+      }
+      
+      plotPred(plotPredList()[[input$timeToPredict]])
+    })
+    
+    # Estiamtion du modèle dynamique et calculs des plots de prédiction #
+    plotPredList <- reactiveVal(NULL)
+    plotPredPhenotype <- reactiveVal(NULL)
+    plotPredLastYear <- reactiveVal(NULL)
+    observeEvent(input$doPred,{
+      plotPredPhenotype(input$selectedColumnPlotPred)
+      plotPredLastYear(input$timeRange[2])
+
+      timeRange=c(input$timeRange[1]:input$timeRange[2])
+      d=data()
+      
+      d$commune=formatCommune(d,"commune") # homogeneisation du noms des communes
+      d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
+        if(!is.na(x)){
+          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+        }else{return(NA)}
+      })
+      
+      # couples communes / numero de departement du fichier importe
+      obsCD=paste(d$commune,d$numero_departement,sep=" * ")
+      # couples communes / numero de departement du fichier gouvernemental
+      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ")
+      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant a des couples commune*numero_departement inconnus
+      
+      rmLines=names(table(c(missingGPS, # lignes a retirer car indisposees a la modelisation
+                            which(is.na(d$modalite) |
+                                    is.na(d[,input$selectedColumnPlotPred]) |
+                                    d$modalite!="TNT" |
+                                    !check.numeric(d[,input$selectedColumnPlotPred]) | # !!!!!!!!!! AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
+                                    !d$annee%in%timeRange))))
+      d=d[-as.numeric(rmLines),]
+      
+      # appariement des regions
+      region=rep(NA,nrow(d))
+      for(i in 1:nrow(d)){
+        region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
+      }
+      d$region=region
+      
+      # création du data à analyser
+      d$t=d$annee-timeRange[1]
+      
+      # !!!!!!!!!! APPLIQUER UNE SELECTION DES ANNEES (SUR LA BASE DE LA FREQUENCE DES 0% DANS LES DONNEES) AVANT DE TRANSFORMER LES 0% EN 1%
+      # !!!!!!!!!! MODELE DE TYPE PRESENCE/ABSCENCE POUR LES PLAGES TEMPORELLES TROP RESTREINTES DUES AU 0% ?
+      
+      d[which(d[,input$selectedColumnPlotPred]==0),input$selectedColumnPlotPred]=1 
+      d[which(d[,input$selectedColumnPlotPred]==100),input$selectedColumnPlotPred]=99
+      
+      d$y=cbind(as.numeric(d[,input$selectedColumnPlotPred]),
+                100-as.numeric(d[,input$selectedColumnPlotPred]))
+      
+      d=d[,which(colnames(d)%in%c("t","region","y"))]
+      
+      tXregion=table(d$t,d$region)
+      meanOcc=round(colMeans(tXregion))
+      tXregion[which(tXregion!=0)]=1
+      timeOcc=colSums(tXregion)
+      keptReg=names(table(d$region))[which(
+        timeOcc>1 &
+        meanOcc>=input$confidenceIndex
+      )]
+      d=d[which(d$region%in%keptReg),]
+      
+      d$region=as.factor(d$region)
+      basicLevels=names(table(d$region))
+      
+      # test si suffisament de données pour faire des prédictions régionales
+      if(length(basicLevels)>1){
+        changedLevels=basicLevels[c(length(basicLevels),1:(length(basicLevels)-1))]
+      }else{
+        sendSweetAlert(session,title="Warning",
+                       text=paste0("Pas assez de points de monitoring pour réaliser 
+                                   une prédiction régionalisée avec un indice de confiance de ",
+                                   input$confidenceIndex,"."),
+                       type="error")
+        plotPred(NULL)
+        estimateSummary(NULL)
+        predictionTable(NULL)
+        return(NULL)
+      }
+      
+      # analyse 1 (levels de d$region=basicLevels)
+      d1=d
+      contrasts(d1$region)="contr.sum"
+      model1=glm(y~region*t,
+                 data=d1,
+                 family=quasibinomial("logit"))
+      estimates1=summary(model1)$coefficients[-1,c(1,2,4)]
+      estimates1=estimates1[grep("t",rownames(estimates1)),]
+      RN1=rownames(estimates1)
+      RN1=sub(":t","",RN1)
+      RN1=basicLevels[as.numeric(str_extract(RN1,"[0-9]+"))]
+      RN1[which(is.na(RN1))]="FRANCE"
+      rownames(estimates1)=RN1
+      
+      # analyse 2 (levels de d$region=changedLevels)
+      d2=d
+      d2$region=factor(d2$region,
+                       levels=changedLevels)
+      contrasts(d2$region)="contr.sum"
+      model2=glm(y~region*t,
+                 data=d2,
+                 family=quasibinomial("logit"))
+      estimates2=summary(model2)$coefficients[-1,c(1,2,4)]
+      estimates2=estimates2[grep("t",rownames(estimates2)),]
+      RN2=rownames(estimates2)
+      RN2=sub(":t","",RN2)
+      RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
+      RN2[which(is.na(RN2))]="FRANCE"
+      rownames(estimates2)=RN2
+      
+      # fusion des summary de l'analyse 1 et 2
+      estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
+      colnames(estimates)=c("Estimation","Ecart-type","P-value")
+      estimates=estimates[!grepl(".1",rownames(estimates)),]
+      
+      # calcul des seuils de significativité
+      estimates$"Signif."=sapply(estimates$"P-value",function(x){
+        if(x<=0.001){return("***")}
+        else if(x<=0.025){return("**")}
+        else if(x<=0.05){return("*")}
+        else if(x<=0.1){return(".")}
+        else{return("")}
+      })
+      estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
+      estimateSummary(estimates) # stockage du data contenant le summary
+      
+      # calcul des fréquences régionales prédites par le modèle GLM
+      predTable=expand.grid(t=c(c(1:5)+max(as.numeric(names(table(d$t))))),
+                  region=names(table(d$region)))
+      predTable=data.frame(predTable,Prediction=(predict.glm(model1,predTable,"response")*100))
+      predTable$Prediction=round(predTable$Prediction)
+      predictionTable(predTable) # stockage du data contenant les prédictions
+      
+      # construction de la list des graphiques de prédiction (t+1 à t+5)
+      predicts=predictionTable()
+      
+      colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
+      color.range=colfunc(101) # background colors
+      
+      rangeX=ext_FR$range[1]-ext_FR$range[2]
+      rangeY=ext_FR$range[3]-ext_FR$range[4]
+      plotRatio=rangeX/rangeY
+      
+      regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(predicts$region))),]
+      
+      pList=MakePredictionPlots(input$selectedColumnPlotPred,
+                           input$timeRange,
+                           color.range,
+                           plotRatio,
+                           ext_FR,
+                           regionsplot,
+                           regionsplotPred,
+                           predicts,
+                           input$confidenceIndex)
+      plotPredList(pList) # stockage de la liste de plot des fréquences prédites
+    })
+    
+    
+    ## Choix de l'utilisateur pour enregistrer la carte de prédiction au format PDF ##
+    output$cartoPredSave <- renderUI({
+      if(is.null(plotPredList())){
+        return(NULL)
+      }
+      
+      return(actionButton("exportPrediction","Exporter les prédictions au format PDF",icon("download")))
+    })
+    
+    observeEvent(input$exportPrediction,{
+      savePath=choose.dir()
+      if(is.na(savePath)){
+        return(NULL)
+      }else{
+        print(plotPredPhenotype())
+        print(plotPredLastYear())
+        print(length(plotPredList()))
+        print(names(plotPredList()))
+        pdf(paste0(savePath,"\\","Predictions_",plotPredPhenotype(),"_",
+                   (plotPredLastYear()+1),"-",(plotPredLastYear()+length(plotPredList())),
+                   "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
+        for(i in 1:length(plotPredList())){
+          plot(plotPredList()[[i]])
+        }
+        dev.off()
       }
     })
     
     
     
     ## Arret de l'application ##
-    # Lorsque l'utilisateur quitte l'application (ferme l'onglet), l'application s'arrête automatiquement #
+    # Lorsque l'utilisateur quitte l'application (ferme l'onglet dans le navigateur WEB), l'application s'arrête automatiquement #
     session$onSessionEnded(function(){
       stopApp()
     })
