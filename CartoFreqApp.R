@@ -17,6 +17,8 @@ library("shinybusy")
 library("shinyFiles")
 # install.packages("shinyWidgets")
 library("shinyWidgets")
+# install.packages("shinyBS")
+library("shinyBS")
 # install.packages("colourpicker")
 library("colourpicker")
 # install.packages("dplyr")
@@ -31,6 +33,10 @@ library("varhandle")
 library("spaMM")
 # install.packages("scatterpie")
 library("scatterpie")
+# install.packages("DT")
+library("DT")
+# install.packages("matrixStats")
+library("matrixStats")
 
 
 
@@ -40,11 +46,16 @@ library("scatterpie")
 ### VARIABLES GLOBALES ###
 ## Set de variable obligatoires et accessoires pour déterminer les colonnes qui seront des fréquences de résistance (i.e. les autres colonnes) ##
 mandatoryVar=c("code_essai","commune","numero_departement","modalite")
-accessoryVar=c("annee","latitude","longitude") # AJOUTER UNE POSSIBILITE D'AJOUTER DIRECTEMENT LES COORDONNEES GPS ?
+accessoryVar=c("annee")
+# accessoryVar=c("annee","latitude","longitude") # AJOUTER UNE POSSIBILITE D'AJOUTER DIRECTEMENT LES COORDONNEES GPS ?
 
 
-## Noms des modalités acceptées par l'application et l'analyse spatiale ##
-usualModilities=c("TR","TNT") # AJOUTER LA POSSIBILITE D'AVOIR D'AUTRES MODALITES STANDARD "T1/2/3/4/X" ?
+## Noms des modalités connues par défaut par l'application, les autres formes sortiront une erreur ##
+usualModilities=c("TR","TNT","T0")
+
+
+## Nom des fréquences connues par défaut par l'application ##
+usualFrequencies=c("BenR","StrR","CarR","TriS","TriLR","TriMR","TriR1.R3","TriR2.R4","TriR5","TriR6","TriR7.R8","MDR","TriHR")
 
 
 ## Palette de couleur par defaut utlisée pour les cartographies ##
@@ -175,7 +186,7 @@ MakePredictionPlots=function(namePhenotype,yearRange,color.range,plotRatio,ext_F
     
     regionsplotPred$Color=sapply(regionsplotPred$Region,function(x){
       freq=predicts$Prediction[which(predicts$region==x & predicts$t==Time)]
-      return(color.range[freq])
+      return(color.range[freq+1])
     })
     
     p=ggplot()
@@ -216,7 +227,7 @@ MakePredictionPlots=function(namePhenotype,yearRange,color.range,plotRatio,ext_F
 
 ### IMPORTATION DES FICHIERS OBLIGATOIRES ###
 ## Ficher des coordonnees GPS a partir de la commune ##
-Q=read.table(paste0(getwd(),"/data/communesGPS.csv"),header=TRUE,sep=";",
+Q=read.table(paste0(getwd(),"/data/CommunesGPS.csv"),header=TRUE,sep=";",
              stringsAsFactors=FALSE,colClasses=c(code_postal="character"))
 
 
@@ -257,7 +268,7 @@ if(interactive()){
   
   
   
-  ### Affichage ###
+  ### Interface graphique ###
   ui <- fluidPage(useShinyjs(),
                   useSweetAlert(),
                   position="left",
@@ -270,11 +281,13 @@ if(interactive()){
                                        div(HTML("<p style=\"font-size:20px;font-weight:bold\">Importation des fichiers :</p>")),
                                        fluidRow(column(4,shinyFilesButton(id="file1",label="Importer un CSV",title="",multiple=FALSE,icon=icon("file-upload"))),
                                                 column(1,uiOutput("refreshData"))),
-                                       h4(htmlOutput("fileName")),
-                                       uiOutput("annualStats"),
                                        uiOutput("pluriannual"),
+                                       htmlOutput("fileName"),
+                                       hr(),
+                                       uiOutput("annualStats"),
                                        uiOutput("phenotypeNameStats"),
                                        uiOutput("yearNameStats"),
+                                       uiOutput("modalityNameStats"),
                                        tableOutput("tableStats"),
                                        hr(),
                                        uiOutput("columnChoiceErr"),
@@ -296,76 +309,137 @@ if(interactive()){
                                        uiOutput("sliderConfidenceIndex"),
                                        tableOutput("resultSummary"),
                                        hr(),
+                                       div(HTML("<p style=\"font-size:20px;font-weight:bold\">Importation de variables explicatives :</p>")),
+                                       fluidRow(column(4,shinyFilesButton(id="file2",label="Importer un Panel",title="",multiple=FALSE,icon=icon("file-upload"))),
+                                                column(1,uiOutput("deleteExplanatoryData"))),
+                                       uiOutput("fileName2"),
+                                       uiOutput("showExplanatoryData"),
+                                       hr(),
                                        uiOutput("predGO"),
                                        uiOutput("cartoPredSave"))),
                     
-                    ## Panels affichant le data ou les cartes ##
+                    ## Panel affichant le fichier importé sour la forme d'un tableau ##
                     mainPanel(
                       tabsetPanel(id="tabs",
-                                  tabPanel(title=h4("Tableau"),value="1",tableOutput("contents"))))))
+                                  tabPanel(title=h4("Tableau"),value="1",DT::dataTableOutput("contents"))))))
   
   
   
   
-  ### Fonctions ###
+  ### Serveur ###
   server <- function(input,output,session){
     
     
     
-    ## Importation du tableau de donnees ##
+    ## ONGLET 1 : Tableau ##
+    ## Importation du tableau de donnees et bouton de rafraichissement ##
     shinyFileChoose(input,"file1",roots=c(wd='.'),filetypes=c("csv")) # bouton d'importation des fichiers CSV
+    file1 <- reactiveVal(NULL)
+    observeEvent(input$file1,{
+      file1(input$file1)
+    })
     
-    currentFilePath <- reactiveVal("") # variable stockant le chemin du fichier importe
-    
-    data <- reactive({ # creation d'une variable dynamique pour le data importe par l'utilisateur
-      inFile=parseFilePaths(roots=c(wd='.'),input$file1)
+    currentFilePath <- reactiveVal(NULL) # variable stockant le chemin du fichier importe
+    data <- reactiveVal(NULL)
+    observeEvent(c(input$file1,input$refresh),{
+      # reset du data
+      currentFilePath(NULL)
+      data(NULL)
+      
+      # reset les valeurs réactives de l'onglet 1 : Tableau
+      selectedPhenotypeStats(NULL)
+      selectedYearStats(NULL)
+      selectedModalityStats(NULL)
+      annualStatsTable(NULL)
+      showStats(NULL)
+      
+      # reset les valeurs réactives de l'onglet 2 : Cartographie
+      plottedPhenotype(NULL)
+      plottedYear(NULL)
+      plottedModality(NULL)
+      plotCarto(NULL)
+      
+      # reset les valeurs réactives de l'onglet 3 : Prédiction
+      file2(NULL)
+      currentFilePath2(NULL)
+      data2(NULL)
+      selectedColumnPlotPred(NULL)
+      timeRange(NULL)
+      confidenceIndex(NULL)
+      estimateSummary(NULL)
+      plotPredList(NULL)
+      plotPred(NULL)
+      
+      # reset des onglets
+      removeTab(inputId="tabs",target="2")
+      removeTab(inputId="tabs",target="3")
+      
+      inFile=parseFilePaths(roots=c(wd='.'),file1())
       if(length(inFile$datapath)==0){
         return(NULL)
       }
-      input$refresh # dependance au bouton refresh
-      
-      currentFilePath(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin
+
+      currentFilePath(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
       dTemp=read.table(currentFilePath(),header=TRUE,sep=";",
                        stringsAsFactors=FALSE,na.strings=c("","-"))
-      if(!all(mandatoryVar%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importe par l'utilisateur
+      
+      if(!all(mandatoryVar%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importé par l'utilisateur
         sendSweetAlert(session,title="Erreur",
                        text=paste0("Toutes les colonnes obligatoires (",paste(mandatoryVar,collapse=", "),") ne sont pas présentes dans le fichier."),
                        type="error")
+        file1(NULL)
+        currentFilePath(NULL)
         return(NULL)
       }
       
-      return(dTemp)
-    })
-    
-    observeEvent(input$file1,{
-      plotPred(NULL) # Efface le contenu du graphique que prédiction GLM
-      plotCarto(NULL) # Efface le contenu du graphique d'extrapolation des fréquence GLMM
-      estimateSummary(NULL) # Efface le tableau des estimation des modèles dynamiques GLM de l'onglet "Prédiction"
-      predictionTable(NULL) # Efface le contenu du tableau des fréquences prédites par l'analyse dynamique par GLM de l'onglet "Prédiction"
-      annualStatsTable(NULL) # Efface le contenu du tableau des statistiques annuelles
-      selectedYearStats(NULL)
-      selectedPhenotypeStats(NULL)
-      showStats(NULL)
-
-      if(is.null(data())){
-        removeTab(inputId="tabs",target="2")
-        removeTab(inputId="tabs",target="3")
-      }else{
-        insertTab(inputId="tabs",
-                  tabPanel(title=h4("Cartographie"),value="2",plotOutput("graph")),
-                  target="1",
-                  position="after")
+      dTemp$commune=formatCommune(dTemp,"commune") # homogénéisation du nom des communes du JDD importé + apport de corrections des noms de communes
+      dTemp$numero_departement=as.character(dTemp$numero_departement)
+      if(file.exists(paste0(getwd(),"/data/CorrectionsCommunes.csv"))){
+        dCorrection=read.table(paste0(getwd(),"/data/CorrectionsCommunes.csv"),
+                               header=TRUE,sep=";",stringsAsFactors=FALSE)
+        newCD=t(apply(dTemp,1,function(x){
+          test=which(dCorrection$commune_old==as.character(x["commune"]) & 
+                       dCorrection$numero_departement_old==as.character(x["numero_departement"]))
+          if(length(test)==1){
+            c(dCorrection$commune_new[test],dCorrection$numero_departement_new[test])
+          }else if(length(test)==0){
+            c(x["commune"],x["numero_departement"])
+          }else{
+            c(x["commune"],x["numero_departement"])
+            print(paste0("!!! ERROR !!! Plusieurs corrections possibles pour le couple ",
+                         x["commune"]," * ",x["numero_departement"]))
+          }
+        }))
+        dTemp$commune=newCD[,1]
+        dTemp$numero_departement=newCD[,2]
       }
+      
+      dTemp$commune=formatCommune(dTemp,"commune") # homogénéisation des noms de commune
+      dTemp$numero_departement=sapply(dTemp$numero_departement,function(x){ # homogénéisation des numéros de département
+        if(!is.na(x)){
+          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
+        }else{return(NA)}
+      })
+      
+      if("annee"%in%colnames(dTemp)){ # règle les problèmes de la colonne code-essai : étiquettes inconnues ou fausses (i.e. répétées sur plusieurs essais différents)
+        dTemp$code_essai=paste(dTemp$annee,dTemp$commune,sep="-")
+      }else{
+        dTemp$code_essai=dTemp$commune
+      }
+      
+      data(dTemp)
+      insertTab(inputId="tabs",
+                tabPanel(title=h4("Cartographie"),value="2",plotOutput("graph")),
+                target="1",
+                position="after")
     })
     
     output$refreshData <- renderUI({
-      return(actionButton("refresh","Rafraîchir",icon("sync-alt")))
+      return(tipify(actionButton("refresh","",icon("sync-alt")),"Rafraîchir le fichier importé",
+                    placement="bottom",trigger="hover"))
     })
-    
+
     output$fileName <- renderText({
-      if(is.null(data())){
-        return(NULL)
-      }
       return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath(),"</i></font>"))
     })
     
@@ -393,8 +467,8 @@ if(interactive()){
       }
 
       d=data()
-      return(selectInput("selectedPhenotypeStats","Fréquence :",colnames(d)[
-        which(!colnames(d)%in%c(mandatoryVar,accessoryVar))]))
+      return(selectInput("selectedPhenotypeStats","Fréquence :",
+                         colnames(d)[which(colnames(d)%in%usualFrequencies)]))
     })
     selectedPhenotypeStats <- reactiveVal(NULL)
     observeEvent(c(input$selectedPhenotypeStats,input$showStats),{
@@ -426,8 +500,39 @@ if(interactive()){
       selectedYearStats(input$selectedYearStats)
     })
     
+    output$modalityNameStats <- renderUI({ # affiche le champ pour selectionner la Modalité
+      if(is.null(showStats())){
+        return(NULL)
+      }
+      if(!showStats()){
+        return(NULL)
+      }
+      if(is.null(selectedPhenotypeStats())){
+        return(NULL)
+      }
+      
+      d=data()
+      
+      if(input$pluriY | "annee"%in%colnames(d)){
+        if(is.null(selectedYearStats())){
+          return(NULL)
+        }
+        modalities=table(d$modalite[which(!is.na(d[,selectedPhenotypeStats()]) & 
+                                            d$annee==selectedYearStats())])
+      }else{
+        modalities=table(d$modalite[which(!is.na(d[,selectedPhenotypeStats()]))])
+      }
+      
+      modalities=modalities[rev(order(modalities))]
+      return(selectInput("selectedModalityStats","Modalité :",c("All",names(modalities))))
+    })
+    selectedModalityStats <- reactiveVal(NULL)
+    observeEvent(c(input$selectedModalityStats,input$showStats),{
+      selectedModalityStats(input$selectedModalityStats)
+    })
+    
     annualStatsTable <- reactiveVal(NULL)
-    output$tableStats <- renderTable({ # Statistiques annuelles des frequences : nationales + regionales
+    output$tableStats <- renderTable({ # Tableau des statistiques annuelles des fréquences : nationales + regionales
       if(is.null(showStats())){
         return(NULL)
       }
@@ -438,18 +543,38 @@ if(interactive()){
       return(annualStatsTable())
     })
     observeEvent(c(selectedPhenotypeStats(),
-                   selectedYearStats()),{
+                   selectedYearStats(),
+                   selectedModalityStats()),{
+                     d=data()
+                     
                      if(is.null(selectedPhenotypeStats())){
                        return(NULL)
+                     }else{
+                       d=d[which(check.numeric(d[,selectedPhenotypeStats()]) &
+                                   !is.na(d[,selectedPhenotypeStats()])),]
+                       d[,selectedPhenotypeStats()]=as.numeric(d[,selectedPhenotypeStats()])
+                       d=d[which(d[,selectedPhenotypeStats()]>=0 &
+                                   d[,selectedPhenotypeStats()]<=100 &
+                                   d[,selectedPhenotypeStats()]==round(d[,selectedPhenotypeStats()])),]
                      }
 
-                     d=data()
-                     d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-                       if(!is.na(x)){
-                         if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-                       }else{return(NA)}
-                     })
-                     
+                     if(is.null(selectedModalityStats())){
+                       return(NULL)
+                     }else{
+                       if(!selectedModalityStats()=="All"){
+                         d=d[which(d$modalite==selectedModalityStats()),]
+                       }
+                     }
+
+                     if(!is.null(selectedYearStats())){
+                       d=d[which(d$annee==selectedYearStats()),]
+                     }
+
+                     if(dim(d)[1]==0){ # test si le data contraint par le phénotype+modalité+année n'est pas vide
+                       return(NULL)
+                       annualStatsTable(NULL)
+                     }
+
                      d$region=sapply(d$numero_departement,function(x){
                        if(!is.na(x)){
                          if(x%in%deptReg$Departement){
@@ -461,45 +586,35 @@ if(interactive()){
                          return(NA)
                        }
                      })
-                     
-                     d=d[which(check.numeric(d[,selectedPhenotypeStats()]) &
-                                 !is.na(d[,selectedPhenotypeStats()])),]
-                     d[,selectedPhenotypeStats()]=as.numeric(d[,selectedPhenotypeStats()])
-                     
-                     if(!is.null(selectedYearStats())){
-                       d=d[which(d$annee==selectedYearStats()),]
-                       if(dim(d)[1]==0){
-                         return(NULL)
-                       }
-                     }
-                     
+
                      out=aggregate(d[,selectedPhenotypeStats()],
                                    list(d$region),
                                    "mean")
                      out=data.frame(cbind(out,as.numeric(table(d$region))))
                      
                      FRA=mean(d[,selectedPhenotypeStats()])
-                     colnames(out)=c("Région",selectedPhenotypeStats(),"n")
+                     colnames(out)=c("Région",
+                                     paste(selectedPhenotypeStats(),selectedYearStats(),selectedModalityStats(),sep=" "),
+                                     "n")
                      out=data.frame(rbind(c("FRANCE",FRA,nrow(d)),out))
-                     out[,selectedPhenotypeStats()]=as.numeric(out[,selectedPhenotypeStats()])
-                     
+                     out[,2]=as.numeric(out[,2])
+
                      annualStatsTable(out)
                    })
 
     
     
-    ## Permet à l'utilisateur d'indiquer si le JDD est pluri-annuel ##
-    testPluriY <- reactiveVal(0)
-    
+    ## Permet à l'utilisateur d'indiquer si le JDD est pluri-annuel : débloque l'onglet Prédiction ##
     output$pluriannual <- renderUI({
       if(is.null(data())){
         return(NULL)
       }
       
-      testPluriY() # dependance a testPluriY pour reset le bouton si le fichier importe ne comporte pas de colonne annee
+      testPluriY() # dependance a testPluriY pour reset le bouton si le fichier importé ne comporte pas de colonne année
       return(prettySwitch("pluriY","Données pluri-annuelles",fill=TRUE))
     })
     
+    testPluriY <- reactiveVal(0)
     observeEvent(input$pluriY,{
       if(input$pluriY){
         if(!"annee"%in%colnames(data())){
@@ -522,30 +637,36 @@ if(interactive()){
     
     
     
-    ## Montre le jeu de donnees importe sous la forme d'un tableau ##
-    output$contents <- renderTable({ # affiche le tableau des donnees brutes
+    ## Affiche le contenu du jeu de données importé sous la forme d'un tableau ##
+    output$contents <- DT::renderDataTable({
       if(is.null(data())){
         return(NULL)
       }
+      
       return(cbind(ligne=c(2:(nrow(data())+1)),data()))
-    })
+    },options=list(lengthMenu=list(c(10,100,1000,-1),c("10","100","1000","All")),
+                   pageLength=100))
     
     
     
-    ## Choix d'une colonne afin d'afficher les erreurs ##
-    output$columnChoiceErr <- renderUI({ # affiche le menu deroulant pour que l'utilisateur choisse la colonne pour laquelle les erreurs s'afficheront
+    ## Propose à l'utilisateur d'afficher les erreurs pour les différentes colonnes du tableau importé ##
+    output$columnChoiceErr <- renderUI({
       if(is.null(data())){
         return(NULL)
       }
+      
+      d=data()
       return(selectInput("selectedColumnErr",
                          HTML("<p style=\"font-size:20px;font-weight:bold\">Affichage des erreurs :</p>"),
-                         colnames(data())))
+                         colnames(d)[which(colnames(d)%in%mandatoryVar |
+                                             colnames(d)%in%accessoryVar |
+                                             colnames(d)%in%usualFrequencies)]))
     })
     
     
     
-    ## Creation des paragraphes contenant les erreurs trouvees dans la colonne selectionee (return en HTML) ##
-    output$errors <- renderText({ # affiche le texte compilant toutes les erreurs trouvees dans la colonne choisie par l'utilisateur
+    ## Création des paragraphes contenant les erreurs relevées dans la colonne selectionée par l'utilisateur (en HTML) ##
+    output$errors <- renderText({ # affichage du texte des erreurs
       if(is.null(data())){
         return(NULL)
       }
@@ -558,14 +679,7 @@ if(interactive()){
       }
       
       d=data()
-      d$commune=formatCommune(d,"commune") # homogeneisation du nom des communes
-      d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-        if(!is.na(x)){
-          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-        }else{return(NA)}
-      })
-      
-      
+
       # Erreurs liees au code de l'essai #
       if(currentCol=="code_essai"){
         if(length(which(is.na(d$code_essai)))!=0){
@@ -608,7 +722,7 @@ if(interactive()){
         }
         
         
-      # Erreurs liees au numero de departement #
+      # Erreurs liées au numero de département #
       }else if(currentCol=="numero_departement"){
         unkwnDepartement=names(table(d$numero_departement[which(!d$numero_departement%in%deptReg$Departement)]))
         unkwnMessages=sapply(unkwnDepartement,function(x){ # liste des numero de departement inconnus + lignes correspondantes
@@ -628,7 +742,7 @@ if(interactive()){
       }
       
       
-      # Erreurs liees aux noms des modalites (TR/TNT) #
+      # Erreurs liées aux noms des modalités (différents de usualModalities) #
       else if(currentCol=="modalite"){
         unkwnModality=names(table(d$modalite[which(!d$modalite%in%usualModilities)]))
         unkwnMessages=sapply(unkwnModality,function(x){ # liste des types de modalite inconnues + lignes correspondantes
@@ -648,7 +762,7 @@ if(interactive()){
         }
         
         
-      # Erreurs liees au frequences de resistance ou aux années (categorie par defaut) #
+      # Erreurs liées au fréquences et/ou aux années (categorie par defaut) #
       }else{
         unkwnValue=names(table(d[,currentCol][which(!check.numeric(d[,currentCol]))])) # Fréquences/Années qui ne sont pas des valeur numériques
         
@@ -660,16 +774,15 @@ if(interactive()){
         
         if(currentCol!="annee"){
           unkwnValue=c(unkwnValue, # Fréquences qui sont des valeurs numériques <0 ou >100
-                           d[,currentCol][
-                             which(d[,currentCol][which(check.numeric(d[,currentCol]))]>100 |
-                                     d[,currentCol][which(check.numeric(d[,currentCol]))]<0)
-                           ])
+                           d[,currentCol][which(d[,currentCol]>100 | d[,currentCol]<0)])
         }
         
         unkwnValue=c(unkwnValue, # Fréquences/Années qui ne sont pas des entiers
                          d[,currentCol][
                            which(d[,currentCol]!=round(d[,currentCol]))
                          ])
+        
+        unkwnValue=names(table(unkwnValue))
         
         unkwnMessages=sapply(unkwnValue,function(x){ # liste des fréquences/années à erreur avec leurs lignes correspondantes dans le fichier importé
           paste0(x," [ligne(s) : ",paste((which(memory==x)+1),collapse=" "),"]")})
@@ -692,243 +805,151 @@ if(interactive()){
     
     
     
-    ## Bouton permettant la creation d'une carte ##
-    output$cartoGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
+    ## ONGLET 2 : Cartographie ##
+    ## Bouton Soumettre, permettant à l'utilisateur de créer une cartographie par krigeage ##
+    output$cartoGO <- renderUI({
       return(actionButton("do", "Soumettre",icon("sync-alt")))
     })
     
     
     
     ## Choix de l'utilisateur pour la fréquence cartographiée ##
-    plottedPhenotype <- reactiveVal("") # variable memoire stockant le nom du Phenotype cartographie
-    output$columnChoicePlot <- renderUI({ # affiche une liste deroulante avec les Phenotypes du fichier importe (colonnes autres que mandatoryVar & accessoryVar)
+    output$columnChoicePlot <- renderUI({ # affiche une liste deroulante avec les Phenotypes du fichier importé
       if(is.null(data())){
         return(NULL)
       }
       
-      return(selectInput("selectedColumnPlot","Fréquence représentée :",colnames(data())[
-        which(!colnames(data())%in%c(mandatoryVar,accessoryVar))]))
+      d=data()
+      return(selectInput("selectedColumnPlot","Fréquence représentée :",
+                         colnames(d)[which(colnames(d)%in%usualFrequencies)]))
+    })
+    plottedPhenotype <- reactiveVal(NULL)
+    observeEvent(c(input$selectedColumnPlot,input$do),{
+      plottedPhenotype(input$selectedColumnPlot)
     })
     
     
     
     ## Choix de l'utilisateur pour l'année cartographiée ##
-    plottedYear <- reactiveVal("") # variable memoire stockant le nom de l'Annee cartographiee
     output$yearName <- renderUI({ # affiche le champ pour selectionner l'Annee
-      if(is.null(data())){
-        return(NULL)
-      }
-      if(is.null(input$pluriY)){
-        return(NULL)
-      }
-      if(is.null(input$selectedColumnPlot)){
+      if(is.null(plottedPhenotype())){
         return(NULL)
       }
       
       d=data()
       if(input$pluriY | "annee"%in%colnames(d)){
         return(selectInput("year","Année représentée :",
-                           names(table(d$annee[which(!is.na(d[,input$selectedColumnPlot]))]))))
+                           names(table(d$annee[which(!is.na(d[,plottedPhenotype()]))]))))
       }else{
         return(textInput("year","Année :"))
       }
+    })
+    plottedYear <- reactiveVal(NULL)
+    observeEvent(c(input$year,input$do),{
+      plottedYear(input$year)
     })
     
     
     
     ## Choix de l'utilisateur pour la modalité cartographiée TR / TNT / All=TR+TNT ##
-    plottedModality <- reactiveVal("") # variable memoire stockant le nom de la Modalite cartographiee
     output$modalityChoicePlot <- renderUI({
-      if(is.null(data())){
-        return(NULL)
-      }
-      if(is.null(input$selectedColumnPlot) | is.null(input$year)){
+      if(is.null(plottedPhenotype())){
         return(NULL)
       }
       
       d=data()
-      d=d[which(!is.na(d[,input$selectedColumnPlot]) &
-                  d$modalite%in%usualModilities),]
-      if(input$pluriY | "annee"%in%colnames(d)){
-        d=d[which(d$annee==input$year),]
-      }
-      modalities=table(d$modalite)
-      
-      return(selectInput("selectedModalityPlot","Modalité représentée :",
-                         paste0(c(names(modalities),"All"),
-                                " (n=",c(as.numeric(modalities),nrow(d)),")")))
-    })
-    
-    
-    
-    ## Choix de l'utilisateur pour enregistrer la carte au format PDF ##
-    output$cartoSave <- renderUI({ # affiche le bouton d'exportation du plotCarto()
-      if(is.null(plotCarto())){
-        return(NULL)
-      }
-      
-      return(actionButton("exportCartography","Exporter la carte au format PDF",icon("download")))
-    })
+      d=d[which(check.numeric(d[,plottedPhenotype()]) &
+                  !is.na(d[,plottedPhenotype()])),]
+      d[,plottedPhenotype()]=as.numeric(d[,plottedPhenotype()])
+      d=d[which(d[,plottedPhenotype()]>=0 &
+                  d[,plottedPhenotype()]<=100 &
+                  d[,plottedPhenotype()]==round(d[,plottedPhenotype()])),]
 
-    observeEvent(input$exportCartography,{ # permet d'enregistrer le plotCarto() lors du clic-bouton
-      savePath=choose.dir()
-      if(is.na(savePath)){
-        return(NULL)
-      }else{
-        pdf(paste0(savePath,"\\",plottedPhenotype(),"_",plottedYear(),"_",plottedModality(),
-                   "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
-        print(plotCarto()[["toSave"]])
-        dev.off()
+      if(input$pluriY | "annee"%in%colnames(d)){
+        if(is.null(plottedYear())){
+          return(NULL)
+        }
+        d=d[which(d$annee==plottedYear()),]
       }
+      
+      modalities=table(d$modalite)
+      modalities=modalities[rev(order(modalities))]
+      return(selectInput("selectedModalityPlot","Modalité représentée :",
+                         paste0(c("All",names(modalities)),
+                                " (n=",c(nrow(d),as.numeric(modalities)),")")))
     })
-    
-    
-    
-    ## Choix de l'utilisateur pour enregistrer la légende de couleur de la carte au format PDF ##
-    # Permet d'afficher la légende de couleur dans l'application #
-    output$legendSave <- renderUI({
-      return(actionButton("exportLegend","Exporter la légende au format PDF",icon("download")))
-    })
-    
-    output$legendPic <- renderImage({
-      outfile=tempfile(fileext=".png")
-      
-      colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
-      color.range=colfunc(101) # background colors
-      
-      p=ggplot()
-      p=p+scale_x_continuous(limits=c(0,length(color.range)+1),expand=c(0,0)) # axe Frequence
-      p=p+scale_y_continuous(limits=c(0,100),expand=c(0,0)) # axe unitaire
-      p=p+geom_point(aes(x=c(1:length(color.range)),y=1),shape=15,size=20,color=color.range)
-      p=p+theme(panel.background=element_rect(fill="#F5F5F5"), # arriere-plan gris (1)
-                panel.grid.major=element_line(colour="#F5F5F5"), # arriere-plan gris (2)
-                panel.grid.minor=element_line(colour="#F5F5F5"), # arriere-plan gris (3)
-                plot.background=element_rect(fill="#F5F5F5"), # arriere-plan gris (4)
-                legend.position="none", # pas de legende
-                plot.margin=margin(c(0,0,0,0),unit="cm"),  # pas de marges (respect du ratio X/Y France)
-                axis.line.x=element_line(colour="#F5F5F5",size=2), # pas de ligne représentant l'axe des x
-                axis.title.x=element_blank(), # pas de titre a l'axe des x
-                axis.ticks.x=element_blank(), # pas de graduation sur l axe des x
-                axis.text.x=element_blank(), # pas d'annotation sur l'axe des x
-                axis.line.y=element_line(colour="#F5F5F5",size=2), # pareil pour l'axe y ....
-                axis.title.y=element_blank(),
-                axis.ticks.y=element_blank(),
-                axis.text.y=element_blank())
-      png(outfile,width=session$clientData$output_legendPic_width,height=38)
-      print(p)
-      dev.off()
-      
-      list(src=outfile,
-           contentType="image/png",
-           width=session$clientData$output_legendPic_width,
-           height=38)
-    },deleteFile=TRUE)
-    
-    
-    # Permet d'enregistrer la legende de couleur lors du clic-bouton #
-    observeEvent(input$exportLegend,{
-      savePath=choose.dir()
-      
-      if(is.na(savePath)){
-        return(NULL)
-      }else{
-        colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
-        color.range=colfunc(101) # background colors
-        
-        pdf(paste0(savePath,"\\Legende_0=",substr(color0(),2,nchar(color0())),"_",
-                   "25=",substr(color25(),2,nchar(color25())),"_",
-                   "50=",substr(color50(),2,nchar(color50())),"_",
-                   "75=",substr(color75(),2,nchar(color75())),"_",
-                   "100=",substr(color100(),2,nchar(color100())),"_",
-                   "(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
-        p=ggplot()
-        p=p+scale_x_continuous(limits=c(0,length(color.range)+1),expand=c(0,0),name="Frequency (%)") # axe Frequence
-        p=p+scale_y_continuous(limits=c(0,100),expand=c(0,0)) # axe unitaire
-        p=p+geom_point(aes(x=c(1:length(color.range)),y=1),shape=15,size=10,color=color.range)
-        p=p+theme(panel.background=element_blank(), # arriere-plan blanc
-                  legend.position="none", # pas de legende
-                  plot.margin=margin(c(0,1,7,1),unit="cm"),  # pas de marges (respect du ratio X/Y France)
-                  axis.line.x=element_blank(), # pas de ligne représentant l'axe des x
-                  axis.title.x=element_text(size=25), # pas de titre a l'axe des x
-                  axis.ticks.x=element_line(size=1.5,colour="black"), # pas de graduation sur l axe des x
-                  axis.text.x=element_text(size=20), # pas d'annotation sur l'axe des x
-                  axis.line.y=element_blank(), # pareil pour l'axe y ....
-                  axis.title.y=element_blank(),
-                  axis.ticks.y=element_blank(),
-                  axis.text.y=element_blank())
-        print(p)
-        dev.off()
-      }
+    plottedModality <- reactiveVal(NULL)
+    observeEvent(c(input$selectedModalityPlot,input$do),{
+      plottedModality(substr(input$selectedModalityPlot,
+                             1,
+                             as.numeric(gregexpr(" \\(n=",input$selectedModalityPlot))-1))
     })
     
     
     
     ## Création de la carte ##
     plotCarto <- reactiveVal(NULL)
-    
     observeEvent(input$do,{
       d=data()
       
-      if(trimws(gsub("\\s+"," ",input$year))==""){ # renvoie une erreur si l'utilisateur n'a pas renseigne d'Annee
+      if(trimws(gsub("\\s+"," ",plottedYear()))==""){ # renvoi une erreur si l'utilisateur n'a pas renseigné d'année
         sendSweetAlert(session,title="Erreur",
                        text=paste0("Veuillez renseigner une année."),
                        type="error")
         return(NULL)
       }
-      
-      plottedPhenotype(paste0(input$selectedColumnPlot)) # stockage du phenotype cartographié
-      
-      plottedYear(paste0(input$year)) # stockage de l'annee cartographiée
-      
-      chosenModality=substr(input$selectedModalityPlot,1,as.numeric(gregexpr(" ",input$selectedModalityPlot))-1) # Modalite choisie par l'utilisateur pour la cartographie
-      plottedModality(paste0(chosenModality)) # stockage de la modalite cartographiee
-      
+
       colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
       color.range=colfunc(101) # background colors
       colorLegend=c(color.range[12],color.range[37],color.range[63],color.range[88]) # pie colors
       
-      
-      # Définition des lignes a retirer pour l'analyse spatiale #
-      d$commune=formatCommune(d,"commune") # homogénéisation du noms des communes
-      d$numero_departement=sapply(d$numero_departement,function(x){ # homogénéisation des numéros de departement
-        if(!is.na(x)){
-          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-        }else{return(NA)}
-      })
-      
-      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples communes / numero de departement du fichier importé
-      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples communes / numero de departement du fichier gouvernemental
-      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant à des couples commune*numero_departement inconnus
-      
-      rmLines=names(table(c(missingGPS, # lignes a retirer car indisposées a la modélisation spatiale
-                            which(is.na(d$code_essai) | 
-                                    is.na(d$modalite) | 
-                                    is.na(d[,input$selectedColumnPlot]) | 
-                                    !d$modalite%in%usualModilities | 
-                                    !check.numeric(d[,input$selectedColumnPlot]) | # !!!!!!!!!! AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
-                                    !d$numero_departement%in%deptReg$Departement))))
-      
+      d=d[which(!is.na(d[,plottedPhenotype()])),]
       if(input$pluriY | "annee"%in%colnames(d)){
-        rmLines=names(table(c(rmLines,
-                              which(d$annee!=input$year))))
-        Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))])
-        Ntotal=length(which(!is.na(d[,input$selectedColumnPlot]) & d$annee==input$year))
-      }else{
-        Nremoved=length(rmLines[which(rmLines%in%which(!is.na(d[,input$selectedColumnPlot])))])
-        Ntotal=length(which(!is.na(d[,input$selectedColumnPlot])))
+        d=d[which(d$annee==plottedYear()),]
+      }
+      if(plottedModality()!="All"){
+        d=d[which(d$modalite==plottedModality()),]
       }
       
+
+      # Définition des lignes a retirer pour réaliser l'analyse spatiale #
+      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples Commune/Département du fichier importé
+      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples Commune/Département du fichier gouvernemental
+      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant à des couples commune*numero_departement inconnus
       
-      # Alerte indiquant le nombre de donnees de frequence retirees pour l'analyse #
+      unkwnFreq=which(!check.numeric(d[,plottedPhenotype()])) # fréquences qui ne sont pas des valeurs numériques
+      tempFreq=d[,plottedPhenotype()]
+      if(length(unkwnFreq)>0){ # transformation des fréquences en valeurs numériques
+        tempFreq[unkwnFreq]=NA # évite de générer un message d'erreur avec le as.numeric() qui suit
+      }
+      tempFreq=as.numeric(tempFreq)
+      unkwnFreq=c(unkwnFreq, # fréquences qui sont des valeurs numériques entières comprises entre 0 et 100
+                 which(tempFreq>100 | tempFreq<0 | tempFreq!=round(tempFreq)))
+
+      rmLines=names(table(c(missingGPS,unkwnFreq,which(is.na(d$code_essai))))) # bilan des lignes à retirer car indisposées a la modélisation spatiale
+
+
+      # Alerte indiquant le nombre de fréquences retirées pour la cartographie #
+      Nremoved=length(rmLines)
+      Ntotal=nrow(d)
+      if(Nremoved/Ntotal==1){
+        sendSweetAlert(session,title="Error",
+                       text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
+                                   "%] des fréquences ",plottedPhenotype()," (",plottedModality(),")"," en ",plottedYear(),
+                                   " ont dû être retirées pour l'analyse spatiale. Cartographie impossible !"),
+                       type="error")
+        return(NULL)
+      }
+      
       sendSweetAlert(session,title="Warning",
                      text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
-                                 "%] des données importées (hors NA) de ",input$selectedColumnPlot," en ",input$year," ont dû être retirées pour 
-                              l'analyse spatiale. Causes possibles : présence (i) de NA dans les colonnes code_essai, 
-                              modalite, commune ou numero_departement, ou (ii) de couples commune/numero_departement 
-                              inconnus (affiliation GPS), ou (iii) de valeurs dans numero_departement inconnus (affiliation regionale),
-                              ou (iv) d'autres valeurs que TR et TNT dans la colonne modalite, ou encore (v) de valeurs non numériques 
-                              dans la colonne ",input$selectedColumnPlot,". Toutes ces erreurs sont détaillées par colonne dans 
-                              l'onglet Tableau."),
+                                 "%] des fréquences ",plottedPhenotype()," (",plottedModality(),")"," en ",plottedYear(),
+                                 " ont dû être retirées pour l'analyse spatiale. Causes possibles : présence (i) de NA 
+                                 dans les colonnes code_essai, commune ou numero_departement, ou (ii) de couples 
+                                 commune/numero_departement inconnus (problème d'affiliation GPS), ou (iii) de valeurs 
+                                 inconnues dans la colonne numero_departement (problème d'affiliation regionale), ou 
+                                 encore (iv) de valeurs non numériques, ou inférieures à 0, ou supérieures à 100 dans la colonne ",
+                                 plottedPhenotype(),". Toutes ces erreurs sont détaillées pour chaque colonne dans l'onglet Tableau."),
                      type="warning")
       d=d[-as.numeric(rmLines),]
       
@@ -952,20 +973,18 @@ if(interactive()){
       d$latitude=latitude
       d$region=region
       
-      
+
       # Run du modele spatial (estimation) #
-      d$y=cbind(as.numeric(d[,input$selectedColumnPlot]),100-as.numeric(d[,input$selectedColumnPlot]))
-      
-      form=as.formula(
-        paste0("y~1+(1|code_essai)+Matern(1|longitude+latitude)")) # formule du modele du modele pour la cartographie
-      if(chosenModality!="All"){
-        d=d[which(d$modalite==chosenModality),]
-      }
+      d[,plottedPhenotype()]=as.numeric(d[,plottedPhenotype()])
+      d$y=cbind(d[,plottedPhenotype()],100-d[,plottedPhenotype()])
+
+      form=as.formula(paste0("y~1+(1|code_essai)+Matern(1|longitude+latitude)")) # formule du modele du modele pour la cartographie
       model=corrHLfit(form,d,family=binomial()) # modele GLMM
+      
       predictions=predict(model,binding="fitted") # tableau des frequences predites par le modele spatial
       coordinates=colnames(attr(model,"info.uniqueGeo")[[1]]) # memoire du nom des coordonnees GPS
       
-      
+
       # Run du krigeage spatial (extrapolation) #
       krig=fillMAP(predictions,coordinates,color.range)
       if(length(which(krig$CX<min(regions$x,na.rm=T) | krig$CX>max(regions$x,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe X
@@ -979,7 +998,7 @@ if(interactive()){
       # Nouveau data contenant les frequences observees par essai, representees sous forme de camembert (4 categories: 0-25 25-50 50-75 75-100) #
       d2=rep(NA,7)
       names(d2)=c("region","longitude","latitude","F0.to.25","F26.to.50","F51.to.75","F76.to.100")
-      for(j in names(table(d$code_essai))){
+      for(j in names(table(d$code_essai))){ # regroupement des fréquences observées dans des caemberts par code_essai
         d2=rbind(d2,c(
           d$region[which(d$code_essai==j)][1],
           d$longitude[which(d$code_essai==j)][1],
@@ -993,7 +1012,7 @@ if(interactive()){
       d2=d2[-1,]
       d2=data.frame(d2)
       for(j in 2:ncol(d2)){d2[,j]=as.numeric(as.character(d2[,j]))}
-      
+
       
       # Definition du ratio X/Y du plot (necessaire pour avoir des camemberts ronds et pas deformes/ovoides)
       rangeX=ext_FR$range[1]-ext_FR$range[2]
@@ -1008,7 +1027,7 @@ if(interactive()){
       
       
       # Creation du graphique #
-      p=MakeCartoPlot(input$selectedColumnPlot,input$year,chosenModality,color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV)
+      p=MakeCartoPlot(plottedPhenotype(),plottedYear(),plottedModality(),color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV)
       
       
       # Fin du processus d'analyse spatiale #
@@ -1025,11 +1044,11 @@ if(interactive()){
       }
       
       return(plotCarto()[["toPlot"]])
-    }, height=750, width=750)
+    },height=750,width=750)
     
     
     
-    ## Modification des parametres graphiques ##
+    ## Modification des paramètres graphiques ##
     output$graphicsButton <- renderUI({
       input$resetColors # dependance au bouton reset des couleurs par defaut
       isolate({
@@ -1076,7 +1095,111 @@ if(interactive()){
     
     
     
-    ## Selection des données par l'utilisateur pour l'analyse predictive regionale ##
+    ## Enregistrement de la carte au format PDF ##
+    output$cartoSave <- renderUI({ # affiche le bouton d'exportation du plotCarto()
+      if(is.null(plotCarto())){
+        return(NULL)
+      }
+      
+      return(actionButton("exportCartography","Exporter la carte au format PDF",icon("download")))
+    })
+    
+    observeEvent(input$exportCartography,{ # permet d'enregistrer le plotCarto() lors du clic-bouton
+      savePath=choose.dir()
+      
+      if(is.na(savePath)){
+        return(NULL)
+      }else{
+        pdf(paste0(savePath,"\\",plottedPhenotype(),"_",plottedYear(),"_",plottedModality(),
+                   "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
+        print(plotCarto()[["toSave"]])
+        dev.off()
+      }
+    })
+    
+    
+    
+    ## Enregistrement de la légende de couleur de la carte au format PDF ##
+    # Affichage de la légende dans l'application #
+    output$legendSave <- renderUI({
+      return(actionButton("exportLegend","Exporter la légende au format PDF",icon("download")))
+    })
+    
+    output$legendPic <- renderImage({
+      outfile=tempfile(fileext=".png")
+      
+      colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
+      color.range=colfunc(101) # background colors
+      
+      p=ggplot()
+      p=p+scale_x_continuous(limits=c(0,length(color.range)+1),expand=c(0,0)) # axe Frequence
+      p=p+scale_y_continuous(limits=c(0,100),expand=c(0,0)) # axe unitaire
+      p=p+geom_point(aes(x=c(1:length(color.range)),y=1),shape=15,size=20,color=color.range)
+      p=p+theme(panel.background=element_rect(fill="#F5F5F5"), # arriere-plan gris (1)
+                panel.grid.major=element_line(colour="#F5F5F5"), # arriere-plan gris (2)
+                panel.grid.minor=element_line(colour="#F5F5F5"), # arriere-plan gris (3)
+                plot.background=element_rect(fill="#F5F5F5"), # arriere-plan gris (4)
+                legend.position="none", # pas de legende
+                plot.margin=margin(c(0,0,0,0),unit="cm"),  # pas de marges (respect du ratio X/Y France)
+                axis.line.x=element_line(colour="#F5F5F5",size=2), # pas de ligne représentant l'axe des x
+                axis.title.x=element_blank(), # pas de titre a l'axe des x
+                axis.ticks.x=element_blank(), # pas de graduation sur l axe des x
+                axis.text.x=element_blank(), # pas d'annotation sur l'axe des x
+                axis.line.y=element_line(colour="#F5F5F5",size=2), # pareil pour l'axe y ....
+                axis.title.y=element_blank(),
+                axis.ticks.y=element_blank(),
+                axis.text.y=element_blank())
+      png(outfile,width=session$clientData$output_legendPic_width,height=38)
+      print(p)
+      dev.off()
+      
+      list(src=outfile,
+           contentType="image/png",
+           width=session$clientData$output_legendPic_width,
+           height=38)
+    },deleteFile=TRUE)
+    
+    # Enregistrement de la légende #
+    observeEvent(input$exportLegend,{
+      savePath=choose.dir()
+      
+      if(is.na(savePath)){
+        return(NULL)
+      }else{
+        colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
+        color.range=colfunc(101) # background colors
+        
+        pdf(paste0(savePath,"\\Legende_0=",substr(color0(),2,nchar(color0())),"_",
+                   "25=",substr(color25(),2,nchar(color25())),"_",
+                   "50=",substr(color50(),2,nchar(color50())),"_",
+                   "75=",substr(color75(),2,nchar(color75())),"_",
+                   "100=",substr(color100(),2,nchar(color100())),"_",
+                   "(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
+        p=ggplot()
+        p=p+scale_x_continuous(limits=c(0,length(color.range)+1),expand=c(0,0),name="Frequency (%)") # axe Frequence
+        p=p+scale_y_continuous(limits=c(0,100),expand=c(0,0)) # axe unitaire
+        p=p+geom_point(aes(x=c(1:length(color.range)),y=1),shape=15,size=10,color=color.range)
+        p=p+theme(panel.background=element_blank(), # arriere-plan blanc
+                  legend.position="none", # pas de legende
+                  plot.margin=margin(c(0,1,7,1),unit="cm"),  # pas de marges (respect du ratio X/Y France)
+                  axis.line.x=element_blank(), # pas de ligne représentant l'axe des x
+                  axis.title.x=element_text(size=25), # pas de titre a l'axe des x
+                  axis.ticks.x=element_line(size=1.5,colour="black"), # pas de graduation sur l axe des x
+                  axis.text.x=element_text(size=20), # pas d'annotation sur l'axe des x
+                  axis.line.y=element_blank(), # pareil pour l'axe y ....
+                  axis.title.y=element_blank(),
+                  axis.ticks.y=element_blank(),
+                  axis.text.y=element_blank())
+        print(p)
+        dev.off()
+      }
+    })
+    
+    
+    
+    
+    ## ONGLET 3 : Prédiction ##
+    ## Sélection des données par l'utilisateur pour l'analyse prédictive régionale ##
     # Liste déroulante des phénotypes disponibles à la prédiction #
     output$columnChoicePlotPred <- renderUI({
       if(is.null(data())){
@@ -1084,29 +1207,56 @@ if(interactive()){
       }
       
       d=data()
-      return(selectInput("selectedColumnPlotPred","Fréquence prédite :",colnames(d)[
-        which(!colnames(d)%in%c(mandatoryVar,accessoryVar))]))
+      return(selectInput("selectedColumnPlotPred","Fréquence prédite :",
+                         colnames(d)[which(colnames(d)%in%usualFrequencies)]))
+    })
+    selectedColumnPlotPred <- reactiveVal(NULL)
+    observeEvent(c(input$selectedColumnPlotPred,input$doPred),{
+      selectedColumnPlotPred(input$selectedColumnPlotPred)
     })
     
     # Slider permettant à l'utilisateur de sélectionner les années d'intérêt pour le phénotype choisi #
     output$sliderY <- renderUI({
-      if(is.null(data())){
+      if(is.null(selectedColumnPlotPred())){
         return(NULL)
       }
-      if(is.null(input$selectedColumnPlotPred)){
-        return(NULL)
-      }
-      
       d=data()
-      years=names(table(d$annee[which(!is.na(d[,input$selectedColumnPlotPred]))]))
-      firstY=min(as.numeric(years))
-      lastY=max(as.numeric(years))
+
+      d=d[which(check.numeric(d[,selectedColumnPlotPred()]) &
+                  !is.na(d[,selectedColumnPlotPred()])),]
+      d[,selectedColumnPlotPred()]=as.numeric(d[,selectedColumnPlotPred()])
+      d=d[which(d[,selectedColumnPlotPred()]>=0 &
+                  d[,selectedColumnPlotPred()]<=100 &
+                  d[,selectedColumnPlotPred()]==round(d[,selectedColumnPlotPred()])),]
+
+      yearsBefore=table(d$annee)
+      dTest=d[-which(d[,selectedColumnPlotPred()]==0 |
+                       d[,selectedColumnPlotPred()]==100),]
+      yearsAfter=table(dTest$annee)
       
-      return(sliderInput("timeRange","Plage temporelle d'apprentissage :",
-                         min=firstY,max=lastY,sep="",
-                         value=c(firstY,lastY),
-                         ticks=FALSE))
+      result=unlist(sapply(c(1:length(yearsBefore)),function(x){
+        round((yearsAfter[which(names(yearsAfter)==names(yearsBefore)[x])]/yearsBefore[x])*100)
+      }))
+      result[which(result<10)]=NA    
+      
+      totalYears=names(result)
+      
+      if(length(which(!is.na(result)))>1){
+        advicedYears=names(na.contiguous(result))
+        return(sliderInput("timeRange","Plage temporelle d'apprentissage :",
+                           min=min(as.numeric(totalYears)),max=max(as.numeric(totalYears)),sep="",
+                           value=c(min(as.numeric(advicedYears)),max(as.numeric(advicedYears))),
+                           ticks=FALSE))
+      }else{
+        timeRange(NULL)
+        return(paste0("Impossible de trouver une plage temporelle adaptée à la modélisation."))
+      }
     })
+    timeRange <- reactiveVal(NULL)
+    observeEvent(c(input$timeRange,input$doPred),{
+      timeRange(input$timeRange)
+    })
+    
     
     
     ## Slider permettant à l'utilisateur de choisir l'indice de confiance souhaité ##
@@ -1117,12 +1267,18 @@ if(interactive()){
                          max=10,
                          value=1))
     })
+    confidenceIndex <- reactiveVal(NULL)
+    observeEvent(c(input$confidenceIndex,input$doPred),{
+      confidenceIndex(input$confidenceIndex)
+    })    
+    
     
     
     ## Bouton permettant de lancer l'analyse dynamique des fréquences ##
     output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
       return(actionButton("doPred","Soumettre",icon("sync-alt")))
     })
+    
     
     
     ## Rendu du tableau des estimations (summary) du modèle dynamique ##
@@ -1132,11 +1288,11 @@ if(interactive()){
     },digits=3)
     
     
+    
     ## Affichage du graphique des prédictions ##
     # Slider permettant à l'utilisateur de choisir la prédiction à t+X #
-    predictionTable <- reactiveVal(NULL)
     output$tPredict <- renderUI({
-      if(is.null(predictionTable())){
+      if(is.null(plotPredList())){
         return(NULL)
       }
       
@@ -1147,11 +1303,12 @@ if(interactive()){
                          value=1))
     })
     
-    # Rendu du plot de prédiction #
+    # Choix des paramètres et rendu du plot de prédiction #
+    plotPredList <- reactiveVal(NULL)
     plotPred <- reactiveVal(NULL)
     output$graphPred <- renderPlot({
       return(plotPred())
-    }, height=750, width=750)
+    },height=750,width=750)
     
     observeEvent(c(input$timeToPredict,input$doPred),{
       if(is.null(plotPredList())){
@@ -1164,73 +1321,62 @@ if(interactive()){
       plotPred(plotPredList()[[input$timeToPredict]])
     })
     
-    # Estiamtion du modèle dynamique et calculs des plots de prédiction #
-    plotPredList <- reactiveVal(NULL)
-    plotPredPhenotype <- reactiveVal(NULL)
-    plotPredLastYear <- reactiveVal(NULL)
+    
+    
+    ## Estimation du modèle dynamique GLM et calculs des cartographies de prédiction ##
     observeEvent(input$doPred,{
-      plotPredPhenotype(input$selectedColumnPlotPred)
-      plotPredLastYear(input$timeRange[2])
-
-      timeRange=c(input$timeRange[1]:input$timeRange[2])
       d=data()
+
+      # Sélection des données pour la modélisation #
+      d=d[which(check.numeric(d[,selectedColumnPlotPred()]) &
+                  !is.na(d[,selectedColumnPlotPred()])),]
+      d[,selectedColumnPlotPred()]=as.numeric(d[,selectedColumnPlotPred()])
+      d=d[which(d[,selectedColumnPlotPred()]>=0 &
+                  d[,selectedColumnPlotPred()]<=100 &
+                  d[,selectedColumnPlotPred()]==round(d[,selectedColumnPlotPred()])),]
+
+      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples communes * numéro de département du fichier importé
+      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples communes * numéro de département du fichier gouvernemental
+      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importé correspondant a des couples commune*numero_departement inconnus
       
-      d$commune=formatCommune(d,"commune") # homogeneisation du noms des communes
-      d$numero_departement=sapply(d$numero_departement,function(x){ # homogeneisation des numeros de departement
-        if(!is.na(x)){
-          if(nchar(x)==1){return(paste0("0",x))}else{return(paste0(x))}
-        }else{return(NA)}
-      })
-      
-      # couples communes / numero de departement du fichier importe
-      obsCD=paste(d$commune,d$numero_departement,sep=" * ")
-      # couples communes / numero de departement du fichier gouvernemental
-      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ")
-      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importe correspondant a des couples commune*numero_departement inconnus
-      
-      rmLines=names(table(c(missingGPS, # lignes a retirer car indisposees a la modelisation
-                            which(is.na(d$modalite) |
-                                    is.na(d[,input$selectedColumnPlotPred]) |
-                                    d$modalite!="TNT" |
-                                    !check.numeric(d[,input$selectedColumnPlotPred]) | # !!!!!!!!!! AJOUTER UN TEST SUR FREQ<0 | FREQ>100 | ROUND(FREQ)!=FREQ ! + METTRE LA COLONNE FREQ EN NUMERIC PLUS TOT
-                                    !d$annee%in%timeRange))))
+      rmLines=names(table(c(missingGPS,which(d$modalite!="TNT" | # lignes a retirer car indisposees a la modelisation
+                                               !d$annee%in%c(timeRange()[1]:timeRange()[2])))))
       d=d[-as.numeric(rmLines),]
-      
-      # appariement des regions
+
+      # Appariement des régions #
       region=rep(NA,nrow(d))
       for(i in 1:nrow(d)){
         region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
       }
       d$region=region
+
+      # Création du data à analyser #
+      d$t=d$annee-timeRange()[1]
       
-      # création du data à analyser
-      d$t=d$annee-timeRange[1]
+      d[which(d[,selectedColumnPlotPred()]==0),selectedColumnPlotPred()]=1 # !!!!!! A CHANGER ? : retirer les 0% et 100% du JDD et estimer leurs proportions annuelle
+      d[which(d[,selectedColumnPlotPred()]==100),selectedColumnPlotPred()]=99
       
-      # !!!!!!!!!! APPLIQUER UNE SELECTION DES ANNEES (SUR LA BASE DE LA FREQUENCE DES 0% DANS LES DONNEES) AVANT DE TRANSFORMER LES 0% EN 1%
-      # !!!!!!!!!! MODELE DE TYPE PRESENCE/ABSCENCE POUR LES PLAGES TEMPORELLES TROP RESTREINTES DUES AU 0% ?
-      
-      d[which(d[,input$selectedColumnPlotPred]==0),input$selectedColumnPlotPred]=1 
-      d[which(d[,input$selectedColumnPlotPred]==100),input$selectedColumnPlotPred]=99
-      
-      d$y=cbind(as.numeric(d[,input$selectedColumnPlotPred]),
-                100-as.numeric(d[,input$selectedColumnPlotPred]))
+      d$y=cbind(d[,selectedColumnPlotPred()],
+                100-d[,selectedColumnPlotPred()])
       
       d=d[,which(colnames(d)%in%c("t","region","y"))]
       
+      # !!!!!!!! AVEC SUBSTANCES ACTIVES PAS TOUTES LES REGIONS (ex: LIMOUSIN)
+      # !!!!!!!! VERIFIER QUE TOUTES LES ANNEES-1 SONT BIEN DANS LE PANEL
       tXregion=table(d$t,d$region)
       meanOcc=round(colMeans(tXregion))
       tXregion[which(tXregion!=0)]=1
       timeOcc=colSums(tXregion)
       keptReg=names(table(d$region))[which(
         timeOcc>1 &
-        meanOcc>=input$confidenceIndex
+        meanOcc>=confidenceIndex()
       )]
       d=d[which(d$region%in%keptReg),]
       
       d$region=as.factor(d$region)
       basicLevels=names(table(d$region))
-      
-      # test si suffisament de données pour faire des prédictions régionales
+
+      # Test si suffisament de régions différentes pour faire une prédiction régionalisée #
       if(length(basicLevels)>1){
         changedLevels=basicLevels[c(length(basicLevels),1:(length(basicLevels)-1))]
       }else{
@@ -1239,13 +1385,13 @@ if(interactive()){
                                    une prédiction régionalisée avec un indice de confiance de ",
                                    input$confidenceIndex,"."),
                        type="error")
+        plotPredList(NULL)
         plotPred(NULL)
         estimateSummary(NULL)
-        predictionTable(NULL)
         return(NULL)
       }
-      
-      # analyse 1 (levels de d$region=basicLevels)
+
+      # Analyse 1 (levels de d$region=basicLevels) #
       d1=d
       contrasts(d1$region)="contr.sum"
       model1=glm(y~region*t,
@@ -1259,7 +1405,7 @@ if(interactive()){
       RN1[which(is.na(RN1))]="FRANCE"
       rownames(estimates1)=RN1
       
-      # analyse 2 (levels de d$region=changedLevels)
+      # Analyse 2 (levels de d$region=changedLevels) #
       d2=d
       d2$region=factor(d2$region,
                        levels=changedLevels)
@@ -1274,13 +1420,13 @@ if(interactive()){
       RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
       RN2[which(is.na(RN2))]="FRANCE"
       rownames(estimates2)=RN2
-      
-      # fusion des summary de l'analyse 1 et 2
+
+      # Fusion des summary de l'analyse 1 et 2 #
       estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
       colnames(estimates)=c("Estimation","Ecart-type","P-value")
       estimates=estimates[!grepl(".1",rownames(estimates)),]
-      
-      # calcul des seuils de significativité
+
+      # Calcul des seuils de significativité #
       estimates$"Signif."=sapply(estimates$"P-value",function(x){
         if(x<=0.001){return("***")}
         else if(x<=0.025){return("**")}
@@ -1291,16 +1437,13 @@ if(interactive()){
       estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
       estimateSummary(estimates) # stockage du data contenant le summary
       
-      # calcul des fréquences régionales prédites par le modèle GLM
+      # Calcul des fréquences régionales prédites par le modèle GLM #
       predTable=expand.grid(t=c(c(1:5)+max(as.numeric(names(table(d$t))))),
                   region=names(table(d$region)))
       predTable=data.frame(predTable,Prediction=(predict.glm(model1,predTable,"response")*100))
       predTable$Prediction=round(predTable$Prediction)
-      predictionTable(predTable) # stockage du data contenant les prédictions
-      
-      # construction de la list des graphiques de prédiction (t+1 à t+5)
-      predicts=predictionTable()
-      
+
+      # Construction de la liste des graphiques de prédiction (de t+1 à t+5) #
       colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
       color.range=colfunc(101) # background colors
       
@@ -1308,22 +1451,25 @@ if(interactive()){
       rangeY=ext_FR$range[3]-ext_FR$range[4]
       plotRatio=rangeX/rangeY
       
-      regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(predicts$region))),]
+      regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(predTable$region))),]
       
-      pList=MakePredictionPlots(input$selectedColumnPlotPred,
-                           input$timeRange,
-                           color.range,
-                           plotRatio,
-                           ext_FR,
-                           regionsplot,
-                           regionsplotPred,
-                           predicts,
-                           input$confidenceIndex)
+      pList=MakePredictionPlots(selectedColumnPlotPred(),
+                                c(timeRange()[1]:timeRange()[2]),
+                                color.range,
+                                plotRatio,
+                                ext_FR,
+                                regionsplot,
+                                regionsplotPred,
+                                predTable,
+                                confidenceIndex())
+
       plotPredList(pList) # stockage de la liste de plot des fréquences prédites
+      
+      # !!!!! (NULL DEVIANCE - RESIDUAL DEVIANCE)/NULL DEVIANCE ou R²
     })
     
     
-    ## Choix de l'utilisateur pour enregistrer la carte de prédiction au format PDF ##
+    ## Choix de l'utilisateur pour enregistrer les cartes de prédiction au format PDF ##
     output$cartoPredSave <- renderUI({
       if(is.null(plotPredList())){
         return(NULL)
@@ -1337,18 +1483,62 @@ if(interactive()){
       if(is.na(savePath)){
         return(NULL)
       }else{
-        print(plotPredPhenotype())
-        print(plotPredLastYear())
-        print(length(plotPredList()))
-        print(names(plotPredList()))
-        pdf(paste0(savePath,"\\","Predictions_",plotPredPhenotype(),"_",
-                   (plotPredLastYear()+1),"-",(plotPredLastYear()+length(plotPredList())),
+        pdf(paste0(savePath,"\\","Predictions_",selectedColumnPlotPred(),"_",
+                   (timeRange()[2]+1),"-",(timeRange()[2]+length(plotPredList())),
                    "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
         for(i in 1:length(plotPredList())){
           plot(plotPredList()[[i]])
         }
         dev.off()
       }
+    })
+    
+    
+    
+    ## Importation de données explicatives pour le modèle de prédiction ##
+    shinyFileChoose(input,"file2",roots=c(wd='.'),filetypes=c("csv")) # bouton d'importation des fichiers CSV
+    file2 <- reactiveVal(NULL)
+    observeEvent(input$file2,{
+      file2(input$file2)
+    })
+    
+    currentFilePath2 <- reactiveVal(NULL) # variable stockant le chemin du fichier importé
+    data2 <- reactiveVal(NULL)
+    observeEvent(input$file2,{
+      inFile=parseFilePaths(roots=c(wd='.'),file2())
+      if(length(inFile$datapath)==0){
+        return(NULL)
+      }
+      
+      currentFilePath2(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
+      dTemp=read.table(currentFilePath2(),header=TRUE,sep=";",
+                       stringsAsFactors=FALSE,na.strings=c("","-"))
+      
+      data2(dTemp)
+    })
+
+    output$showExplanatoryData <- renderTable({
+      if(is.null(data2())){
+        return(NULL)
+      }
+      return(head(data2()))
+    })
+    
+    output$deleteExplanatoryData <- renderUI({
+      if(is.null(data2())){
+        return(NULL)
+      }
+      return(tipify(actionButton("deleteExpData","",icon("trash-alt")),"Supprimer les variables explicatives",
+                    placement="bottom",trigger="hover"))
+    })
+    observeEvent(input$deleteExpData,{
+      file2(NULL)
+      currentFilePath2(NULL)
+      data2(NULL)
+    })
+    
+    output$fileName2 <- renderText({
+      return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath2(),"</i></font>"))
     })
     
     
