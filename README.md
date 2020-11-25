@@ -97,43 +97,54 @@ Acronymes des régions (découpage administratif avant la réforme territoriale 
 &nbsp;
 
 ## Utilisation de l'application : cartographie annuelle des fréquences.
-#### > Cliquer sur l'onglet *Cartographie* qui apparait après l'importation d'un fichier valide.
-&nbsp;
+#### > Cliquer sur l'onglet *Cartographie* qui apparait après l'importation d'un fichier CSV valide.
+
+
 &nbsp;
 
 #### > Renseigner les informations nécessaires dans le formulaire à gauche.
 L'année, le phénotype et la modalité choisi seront indiqués en titre du graphique. L'utilisateur à le choix de cartographier un type de modalité en particulier, mais il peut également considérer que toutes les modalités sont des répétitions homogènes au sein d'une même étiquette "code_essai" (qui peut correspondre à la commune, *cf.* fin de la Partie1-Chapitre 1).
-&nbsp;
+
+
 &nbsp;
 
 #### > Si besoin, modifier l'échelle de couleur pour les fréquences.
 Cliquer sur la palette pour redéfinir les couleurs aux seuil : 0%, 25%, 50%, 75% et 100%. L'application se charge automatiquement de réaliser le gradient de couleur correspondant. L'échelle de couleur peut être sauvegardée au format PDF en cliquant sur le bouton *Exporter la légende au format PDF*. Le titre du fichier généré correspondra aux différents seuils de couleurs choisis (en code hexadécimal) pour ré-utilisation future si nécessaire. Les couleurs du gradient de base (à l'ouverture de l'application) peuvent être modifiées en changeant les valeurs dans la liste *defaultColors* du script de l'application. Le titre intègre également la date (jj-mm-aaaa) à laquelle a été exporté le PDF de la légende de couleur.
-&nbsp;
+
+
 &nbsp;
 
 #### > Cliquer sur le bouton *Soumettre*.
 L'application affiche automatiquement le nombre de fréquences (hors NA), qui ont dûes être écartées de l'analyse par faute et/ou défaut d'information dans les autres colonnes du JDD. La carte affiche les fréquences extrapolées sur le territoire français à partir des points d'observations des essais. Chaque point correspond à un essai (ou commune, *cf.* fin de la Partie1-Chapitre 1). Dans chaque point, sont représentées sous forme de camembert les fréquences observées. Les camemberts représentent la fraction de fréquences observées entre 0-25%, 26-50%, 51-75%, 76-100%. Les couleurs choisies pour représenter ces quatres catégories correspondent respectivement aux couleurs des fréquences 12%, 37%, 63% et 88% (*i.e.* couelurs des fréquences médianes de chacune des catégories).
-&nbsp;
+
+
 &nbsp;
 
 #### > Enregistrer la carte.
 Cliquer sur le bouton *Exporter au format PDF*. Le nom de fichier nouvellement créer comporte les informations du phénotype, de l'année et de la modalité cartographiés, ainsi que la date (jj-mm-aaaa) à laquelle a été exporté le PDF de la cartographie.
+
+
 &nbsp;
-&nbsp;
+
+
 &nbsp;
 
 ## Mise en forme d'un JDD pluri-annuel
 #### > Compiler à la main un JDD pluri-annuel.
 Il peut être intéressant de compiler les différentes données annuelles dans un seul et même JDD pluri-annuel afin de pouvoir réaliser une analyse dynamique de l'évolution des fréquences années après années. Pour cela, il faut concaténer les JDD annuels dans un seul et même fichier CSV sous Excel. Il faudra alors ajouter une colonne au sein du JDD pluri-annuel : "annee"; qui permet de distinguer les différentes années d'observation dans le JDD pluri-annuel.
-&nbsp;
+
 :warning: Lors de la compilation pluri-annuelles sous Excel bien faire attention à faire coincider les bon noms de colonnes entre-elles (les JDD annuels ne sont pas forcément homogènes entre-eux). Par exemple, si un nouveau type de fréquence apparait, ou qu'une fréquence n'est plus mesurée à une année donnée laisser les cases où la fréquence n'est plus/n'a pas été mesurée vides.
-&nbsp;
+
+
 &nbsp;
 
 #### > Importer le fichier pluri-annuel dans l'application.
 Après avoir sélectionné le JDD pluri-annuel lors de l'importation d'un fichier CSV, cliquer sur le bouton *Données pluri-annuelles* afin de faire apparaitre un nouvel onglet : *Prediction*. L'application retournera une erreur si la colonne "annee" n'est pas présente dans le JDD. Si l'utilisateur ne coche pas la case *Données pluri-annuelle*, l'onglet *Prediction* n'apparaitra pas, mais l'application détecteraquand même automatiquement la présence/absence de la colonne "annee", et proposera donc de sélectionner l'année parmi celles présentes dans le JDD lors du calcul des statistiques annuelles ou des cartographies des fréquences par exemple.
+
+
 &nbsp;
-&nbsp;
+
+
 &nbsp;
 
 ## Utilisation de l'application : prédiction régionale des fréquences dans les parcelles non traitées.
