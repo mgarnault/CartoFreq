@@ -1,79 +1,141 @@
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France.
+
+
 &nbsp;
+
+
 &nbsp;
+
+
 &nbsp;
 
 ## Etapes de préparation des données annuelles.
 #### > Ouvrir le jeu de données (JDD) dans Excel (.xls ou .xlsx).
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Réaliser un premier enregistrement **brut** au format CSV.
 *Fichier* &#8594; *Enregistrer sous* &#8594; *Type : "CSV (séparateur : point-virgule)*. Cliquer sur accepter puis quittez sans enregistrer à nouveau (même si Excel vous le demande).
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Apprêter les données.
 **1-** Faire en sorte que la première ligne du tableur corresponde au nom des colonnes.
 Les noms de colonnes obligatoires sont : "code_essai" la variable contenant l'étiquette des différents essais (chaines de caractères ou nombres qui doivent être **UNIQUE** pour chaque essai différent d'une année donnée), "commune" la variable contenant le nom des communes (chaine de caractères), "numero_departement" la variable contenant le numéro du département français (nombre avec 1 ou 2 chiffres), "modalite" la variable contenant l’information du type de modalité (chaines de caractères "TR" si traité, "T0" et "TNT" sinon). Sans ces colonnes l'importation du fichier dans l'application échouera. Le nom de ces colonnes sont stockées dans le vecteur *mandatoryVar* du script de l'appplication.
+
+
 &nbsp;
 
 Le tableur doit également contenir les colonnes qui correspondent aux fréquences de résistance d’intérêt (nombres entiers compris entre 0 et 100, exprimés en %). Les colonnes fréquences reconnues par l'application sont stockées dans le vecteur *usualFrequencies* du script de l'application.
+
+
 &nbsp;
 
 D'autres colonnes peuvent figurer dans le tableau mais elles ne seront pas accessibles dans l'application (ex: "code_INRA" qui permet de faire le lien entre les différents JDD, ou "traitement_1"/"traitement_2"/"traitement_3"/"traitement_4" qui contiennent l'information de la composition des traitements sur les parcelles traitées).
+
+
 &nbsp;
 
 Concernant la colonne "code_essai", elle peut parfois comporter des valeurs fausses (répétées sur plusieurs essais manifestement différents) ou manquantes, ce qui pose problème lors de la modélisation des données. Il peut être intéressant de corriger les valeurs de la colonne "code_essai" en se basant sur l'information du préleveur et de l'organisme commanditaire. Pour ce faire dans Excel, aller dans l'onglet *Accueil* &#8594; *Tirer et Filtrer* &#8594; choisir *Tri personnalisé* et trier par "code_essai", cliquer sur *Ajouter un niveau* et classer dans un second temps par "commune" (cela permet de mieux se rendre compte de l'homogénéité ou non des noms des essais). Enfin, étiqueter la "code_essai" au mieux.
 Si cette procédure de correction est trop longue (ou pas satisfaisante), laisser tomber la colonne "code_essai" et laisser la telle quelle. Dans le script de l'application la partie *# règle les problèmes de la colonne code-essai* se chargera de remplacer l'information de la colonne "code_essai" par la colonne "commune" qui comporte bien moins de valeurs manquantes et/ou fausses. Cette procédure remplacera les effets aléatoires liés aux essais dans les modèles par des effets aléatoires liés aux communes (la quantification de bruit sera donc moins locale, mais c'est mieux que rien !). En revanche remplacer le "code_essai" par la "commune" est déconseillé si l'on souhaite faire une analyse de l'effet des traitements parcellaires, car alors, il sera devenu impossible de retrouvé le témoin associé dans l'essai (sauf s'il n'y a systématiquement qu'un seul essai par commune, mais c'est rarement le cas).
+
+
 &nbsp;
 
 **2-** Faire en sorte que la dernière ligne non-vide du tableur corresponde bien à la dernière observation de fréquence.
+
+
 &nbsp;
 
 **3-** Supprimer toutes les lignes inutiles pour la cartographie : retirer les essais hors France métropolitaine, les lignes où aucune fréquence n'a été mesurée.
+
+
 &nbsp;
 
 **4-** Remplacer les caractères spéciaux encore présents dans les cellules en utilisant l’outil chercher/remplacer d’Excel : transformer les ";" (point-virgules), "'" (apostrophes), et "#" (symboles dièse) par des " " (espaces vides). Transformer les "," (virgules) en "." (points).
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Réaliser un second enregistrement **corrigé** au format CSV.
+
+
 &nbsp;
+
+
 &nbsp;
+
+
 &nbsp;
 
 ## Utilisation de l'application : correction des erreurs.
 #### > Ouvrir le script CartoFreqApp.R dans Rstudio.
 Sélectionner tout le code (Ctrl+A) et cliquer sur *Run* en haut à droite du script. Si certain packages sont manquants, installez-les grâce aux fonctions *install.packages()*.
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Importer des données.
 Importer un JDD au format CSV dans l’application via le bouton *Importer un CSV*.
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Vérifier la cohérence des données.
 Comparer l'affichage des données dans l'application avec le fichier CSV d'origine ouvert sous Excel : le nombre de lignes, colonnes, la présence et la forme des données, etc.
+
+
 &nbsp;
+
+
 &nbsp;
 
 #### > Corriger les erreurs.
 Dans la partie "Affichage des erreurs", regarder et corriger dans le fichier CSV le maximum des erreurs renvoyées par l'application. Moins il y aura d'erreurs, moins l'application sera forcée à retirer des observations de fréquence lors de l'analyse automatisée des données. Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche en se basant sur le code postal).
 Le fichier CSV peut être modifié en direct alors que celui-ci est déjà importé dans l'application. Dans ce cas, après avoir modifié puis enregistrer les modifications (sous Excel dans le fichier CSV), cliquer sur le bouton de rafraîchissement automatique se situant à droite du bouton d'importation, afin de ré-importer le fichier courant.
+
+
 &nbsp;
+
+
 &nbsp;
+
+
 &nbsp;
 
 ## Utilisation de l'application : affichage des statistiques annuelles.
 #### > Cliquer sur le bouton *Afficher les statistiques annuelles* qui se situe sur le panneau de gauche sous le bouton d'importation.
 Il est préférable d'avoir corrigé le maximum d'erreurs (notamment dans les colonnes "numero_departement" et de la fréquence considérée) avant de calculer les fréquences moyennes régionales et nationale. Si un numero de département est manquant/faux la fréquence associée ne sera pas considérée dans la moyenne régionale. En revanche, toutes les fréquences observées dans le JDD seront considérées dans la moyenne nationale. C'est pourquoi il est important de bien avoir supprimé toutes les lignes correspondantes à des observations dans d'autres pays. Dans le tableau affichant les fréquences moyennes, sont associés le nombre d'observations sur lequelles la moyenne a été calculé (colonne "n").
+
+
 &nbsp;
 
 Acronymes des régions (découpage administratif avant la réforme territoriale de 2015) : ALS, Alsace; AUV, Auvergne; AQU, Aquitaine; BNO, Basse-Normandie; BOU, Bourgogne; BRE, Bretagne; CEN, Centre, CHA, Champagne-Ardennes; FCO, Franche-Comté; HNO, Haute-Normandie; IDF, Ile-de-France; LAR, Languedoc-Roussillon; LIM, Limousin; LOR, Lorraine; MPY, Midi-Pyrénées; NPC, Nord-Pas-de-Calais; PCH, Poitou-Charentes; PDL, Pays de la Loire; PIC, Picardie; RAL, Rhône-Alpes. Ces acronymes sont compilés dans le fichier *departementsToRegions.csv*.
+
+
 &nbsp;
+
+
 &nbsp;
+
+
 &nbsp;
 
 ## Utilisation de l'application : cartographie annuelle des fréquences.
