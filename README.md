@@ -155,6 +155,9 @@ Après avoir sélectionné le JDD pluri-annuel lors de l'importation d'un fichie
 
 #### > Choisir la fréquence à étudier.
 
+
+&nbsp;
+
 #### > Choisir la plage temporelle d'apprentissage du modèle dynamique.
 Utiliser le slider pour sélectionner la plage temporelle sur lequel le modèle dynamique va estimer les taux de croissance. Plus la plage temporelle sélectionnée sera grande plus l'estimation sera robuste. Par défaut le slider année comporte un plage temporelle d'étude "optimale" qui est calculée automatiquement par l'application. Cette plage temporelle correspond à la plus longue plage temporelle continue où les fréquences du phénotype étudié sont assez différentes de 0% et de 100% (*i.e.* années où les fréquences 0% et 100% ne représentent pas plus de 90% des fréquences observées). Les années hors de cette plage temporelle sont considérées comme inutiles du point de vue de l'analyse de la dynamique d'évolution des fréquences. En effet, si trop de 0% sont observés le phénotype est probablement encore dans sa phase d'émergence (ou des modèles de présence/absence seraient peut-être plus adaptés) ou alors déjà éteind. En revanche, si trop de 100% sont observées le phénotype est complètement généralisé et il est alors très difficile de quantifier des effets de sélection.
 
@@ -172,16 +175,31 @@ L'indice de confiance correspond au nombre minimal de point observé en moyenne 
 #### > Lancer l'analyse : cliquer sur le bouton *Soumettre*.
 Le tableau qui s'affiche sur le panneau de droite correspond à l'estimation des taux de croissance en échelle logit : la ligne FRANCE correspond au taux de croissance global national : une valeur positive (respectivement négative) implique une augmentation (respectivement diminution) globale de la fréquence en France. Les autres lignes correspondent au taux de croissance régionnaux **relativement** au taux national. Les taux de croissance régionnaux absolus s'obtiennent en sommant le taux de croissance national au taux relatifs régionnaux.
 
-Exemple : Si on observe +0.86 (\*\*\*) en FRANCE, -0.5 () dans REGION1 et +0.32 (\*) dans REGION2, cela signifie que la fréquence augmente de manière significative en FRANCE (**+0.86**), que la fréquence augmente également dans REGION1 mais que la dynamqiuye régionale ne diffère pas significativement de la tendance nationale (+0.68-0.5=**+0.36**), alors que la sélection du phénotype dans la REGION2 est significativement accélérée par rapport à la tendance nationale (+0.86+0.32=**+1.18**).
-La fitness relative apparente du phénotype (*i.e.* vitesse relative à laquelle le phénotype évolue dans la population vis-à-vis des autres phénotypes complémentaires dans la population : résistant vs. sensible pour les phénotypes qualitatifs; résistant 1 vs. autres résistants pour les phénotypes quantitatifs), s'obtient en prenant l'exponentielle des taux de croissance du tableau. Si on reprend le même exemple on a donc un phénotype de résistance qui croit exp(0.86)=2.36 fois plus vite que le/les phénotypes complémentaires dans la popuation. Une fitness relative apparente <1 indique une décroissance de la fréquence dasn la population, >1 indique une augmentation de la fréquence dans la population, ~1 indique une fréquence stable.
-L'EFD (Expected Frequency Difference), correspond au changement de fréquence observé entre deux années pour une population initialement prise à sa moyenne observée dans les données. Si la fréquence moyenne du phénotype étudié dans les données est de 25% (F=0.25), l'EFD se calcule comme suit : (F - *logit*<sup>-1</sup>(*logit*(F) + 0.86)) \* 100= pour reprendre l'exemple précédent. Ceci indique que globalement en France, on tend à observe une augmentation annuelle de  
+Exemple : Si on observe **+0.86** (\*\*\*) en FRANCE, **-0.5** () dans REGION1 et **+0.32** (\*) dans REGION2, cela signifie que la fréquence augmente de manière significative en FRANCE (**+0.86**), que la fréquence augmente également dans REGION1 mais que la dynamqiuye régionale ne diffère pas significativement de la tendance nationale (+0.68-0.5=**+0.36**), alors que la sélection du phénotype dans la REGION2 est significativement accélérée par rapport à la tendance nationale (+0.86+0.32=**+1.18**).
+La fitness relative apparente du phénotype (*i.e.* vitesse relative à laquelle le phénotype évolue dans la population vis-à-vis des autres phénotypes complémentaires dans la population : résistant vs. sensible pour les phénotypes qualitatifs; résistant 1 vs. autres résistants pour les phénotypes quantitatifs), s'obtient en prenant l'exponentielle des taux de croissance du tableau. Si on reprend le même exemple on a donc un phénotype de résistance qui croit exp(0.86)=**2.36** fois plus vite que le/les phénotypes complémentaires dans la popuation. Une fitness relative apparente <1 indique une décroissance de la fréquence dasn la population, >1 indique une augmentation de la fréquence dans la population, ~1 indique une fréquence stable.
+L'EFD (Expected Frequency Difference), correspond au changement de fréquence observé entre deux années pour une population initialement prise à sa moyenne observée dans les données. Si la fréquence moyenne du phénotype étudié dans les données est de 25% (F=0.25), l'EFD se calcule comme suit : (*logit*<sup>-1</sup>(*logit*(F) + 0.86) - F) \* 100=**+19%** si on reprend l'exemple précédent. Ceci indique que globalement en France, on tend à observer une augmentation annuelle de 19 point de fréquence pour le phénotype considéré.
+
+
+&nbsp;
 
 #### > Changement des couleurs de la palette graphique.
-La palette graphique utilisée pour généré les graphiques de prédiction correspond à celle utilisée dans l'onglet *Cartographie*. Modifier la palette et l'exporter à partir de cet onglet, puis revenir à l'onglet *Prédiction*. Si les cartographies de prédiction ont déjà été générées et que l'échelle de couleur a été modifiée par la suite, il est nécessaire de resoumettre l'anlyse prédictive pour appliquer le changement de couleur sur les cartographies.
+La palette graphique utilisée pour généré les graphiques de prédiction correspond à celle utilisée dans l'onglet *Cartographie*. Modifier la palette et l'exporter à partir de cet onglet, puis revenir à l'onglet *Prédiction*. Si les cartographies de prédiction ont déjà été générées et que l'échelle de couleur a modifiée ensuite, il est nécessaire de resoumettre l'analyse prédictive pour appliquer le changement de couleur sur les cartographies.
+
+
+&nbsp;
 
 #### > Ajout de variables explicatives régionales.
 Une fois l'importation des fichiers terminée, re-soumettre l'analyse.
 
+
+
+
+
+&nbsp;
+
+
+&nbsp;
+## Compilation des données de surfaces cultivées en blé et d'utilisation des fongicides.
 Les données de surfaces cultivées en blé sont tirées de JDD d'AGRESTE (extraction *via* ARVALIS) : superficie en blé dur et en blé tendre d'hiver, exprimées en HA, par département et par an (/data/SurfacesBlé/Surfaces.xlsx). Ces données ont été mises enregistrées au format CSV (séparateur:point-virgule) dans deux fichiers distincts : un pour le blé dur (/data/SurfacesBDH.csv); et un pour le blé tendre (data/SurfacesBTH.csv). Ces deux JDD ont été mise en forme (/data/SurfacesBDH - Corrige.csv & SurfacesBTH - Corrige.csv) : supression des premières lignes inutiles, ajout d'une colonne "HA" qui correspond aux surfaces cultivées (value * 1000), suppression des caractères spéciaux dans les noms de départements ("'", ";", ... remplacés par des espaces vides " "), sélection des colonnes d'intérêt renommées en "departement", "annee" et "HA". Enfin, l'utilisation du script *Build_SurfacesBle.R* permet de fusionner les deux JDD et de mettre les bons acronymes des régions, pour finalement obtenir la donnée de surface cultivée en blé (dur+tendre) exprimée en HA, par région et par an. Ces données sont à compléter et à recompiler chaque année.
 
 Les données d'utilisation des fongicides sont tirées de JDD de BAYER : hectares déployés par susbtance active, par région et par an (/data/Fongicides/FongiCéré_Qté_HA_AI_1990-2019_Blé.xlsx). C'est données ont été enregistrées au format CSV (séparateur:point-virgule) dans le fichier /data/PanelFongicides.csv. Ce JDD a été mise en forme (/data/PanelFongicides - Corrige.csv) : suppression des premières lignes inutiles, supression des colonnes liées à la quantité de matière active exprimée en KG, renommage des colonnes "matiere_active" et "region". Enfin, l'utilisation du script *Build_UtilisationFongicide.R* permet de transformer légèrement le JDD afin d'attribuer les modes d'actions aux différentes substances actives (*via* le fichier Affiliation_MatieresActives.csv), et de mettre les bons acronymes des régions, pour finalement avoir obtenir la donnée de l'utilisation des substances actives exprimée en hectares déployés, par région et par an. Ces données sont à compléter et à recompiler chaque année.
