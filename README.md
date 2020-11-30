@@ -75,8 +75,9 @@ Comparer l'affichage des données dans l'application avec le fichier CSV d'origi
 &nbsp;
 
 #### > Corriger les erreurs.
-Dans la partie "Affichage des erreurs", regarder et corriger dans le fichier CSV le maximum des erreurs renvoyées par l'application. Moins il y aura d'erreurs, moins l'application sera forcée à retirer des observations de fréquence lors de l'analyse automatisée des données. Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche en se basant sur le code postal).
+Dans la partie "Affichage des erreurs", regarder et corriger dans le fichier CSV le maximum des erreurs renvoyées par l'application. Moins il y aura d'erreurs, moins l'application sera forcée à retirer des observations de fréquence lors de l'analyse automatisée des données.
 Le fichier CSV peut être modifié en direct alors que celui-ci est déjà importé dans l'application. Dans ce cas, après avoir modifié puis enregistrer les modifications (sous Excel dans le fichier CSV), cliquer sur le bouton de rafraîchissement automatique se situant à droite du bouton d'importation, afin de ré-importer le fichier courant.
+Concernant la colonne "commune" il peut être nécessaire de chercher dans le fichier *communesGPS.csv* afin de retrouver le bon nom de commune (ou un nom d'une commune proche en se basant sur le code postal). Les corrections apportés à la colonne "commune" peuvent se faire par le biais du fichier *CorrectionsCommunes.csv*, où il faut indiquer les anciens nom de commune et numéro de département (générant l'erreur dans l'application) dans les colonnes **A** et **B** et indiquer les nouveaux nom de commune et numéro de département (corrections réalisées par l'utilisateur) dans les colonnes **C** et **B**.
 
 
 &nbsp;
