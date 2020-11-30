@@ -37,6 +37,8 @@ library("scatterpie")
 library("DT")
 # install.packages("matrixStats")
 library("matrixStats")
+# install.packages("MuMIn")
+library("MuMIn")
 
 
 
@@ -45,9 +47,11 @@ library("matrixStats")
 
 ### VARIABLES GLOBALES ###
 ## Set de variable obligatoires et accessoires pour déterminer les colonnes qui seront des fréquences de résistance (i.e. les autres colonnes) ##
-mandatoryVar=c("code_essai","commune","numero_departement","modalite")
-accessoryVar=c("annee")
-# accessoryVar=c("annee","latitude","longitude") # AJOUTER UNE POSSIBILITE D'AJOUTER DIRECTEMENT LES COORDONNEES GPS ?
+mandatoryVar1=c("code_essai","commune","numero_departement","modalite")
+accessoryVar1=c("annee")
+mandatoryVar2=c("annee","region","matiere_active","moa","ha_dc")
+# !!!!!! AJOUTER UNE POSSIBILITE D'AVOIR DIRECTEMENT LES COORDONNEES GPS DANS LE DATA IMPORTE ?
+# accessoryVar1=c("annee","latitude","longitude") 
 
 
 ## Noms des modalités connues par défaut par l'application, les autres formes sortiront une erreur ##
@@ -177,48 +181,38 @@ MakeCartoPlot=function(phenotype,annee,modalite,color.range,colorLegend,plotRati
 
 
 ## Fonction qui permet de créer une liste de plot correspondant à la prédiction des fréquences au temps t+1 à t+5 ##
-MakePredictionPlots=function(namePhenotype,yearRange,color.range,plotRatio,ext_FR,regionsplot,regionsplotPred,predicts,confidenceIndex){
-  pList=list()
-  count=0
+MakePredictionPlot=function(namePhenotype,yearRange,time,color.range,plotRatio,ext_FR,regionsplot,regionsplotPred,predicts,confidenceIndex){
+  regionsplotPred$Color=sapply(regionsplotPred$Region,function(x){
+    freq=predicts$Prediction[which(predicts$region==x)]
+    return(color.range[freq+1])
+  })
   
-  for(Time in min(predicts$t):max(predicts$t)){
-    count=count+1
-    
-    regionsplotPred$Color=sapply(regionsplotPred$Region,function(x){
-      freq=predicts$Prediction[which(predicts$region==x & predicts$t==Time)]
-      return(color.range[freq+1])
-    })
-    
-    p=ggplot()
-    p=p+scale_x_continuous(limits=c(ext_FR$range[1]/plotRatio,ext_FR$range[2]/plotRatio),expand=c(0,0)) # dimension de l'axe x
-    p=p+scale_y_continuous(limits=c(ext_FR$range[3],ext_FR$range[4]),expand=c(0,0)) # dimension de l'axe y
-    p=p+coord_equal()
-    p=p+theme(panel.background=element_blank(), # arriere-plan blanc
-              legend.position="none", # pas de legende
-              plot.margin=margin(c(0,0,0,0),unit="cm"), # pas de marges (respect du ratio X/Y France)
-              axis.line.x=element_blank(), # pas de ligne representant l'axe des x
-              axis.title.x=element_blank(), # pas de titre a l'axe des x
-              axis.ticks.x=element_blank(), # pas de graduation sur l axe des x
-              axis.text.x=element_blank(), # pas d'annotation sur l'axe des x
-              axis.line.y=element_blank(), # de meme pour l'axe y ....
-              axis.title.y=element_blank(),
-              axis.ticks.y=element_blank(),
-              axis.text.y=element_blank())
-    p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region)
-                      ,data=regionsplot,fill="grey",color="black",size=.75) # grisage des regions non observees
-    p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),
-                       data=regionsplotPred,fill=regionsplotPred$Color,color="black",size=.75) # affichage de la prédiction dans les régions monitorées
-    p=p+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.175,na.rm=T))/plotRatio,
-                        y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),
-                    label=paste0("Prédiction ",namePhenotype," en ",(max(yearRange)+count),"\n",
-                                 "(Indice de confiance = ",confidenceIndex,"/10)","\n",
-                                 "(Apprentissage sur ",min(yearRange)," - ",max(yearRange),")"),size=5) # titre 
-    
-    pList[[count]]=p
-    names(pList)[count]=as.character(Time)
-  }
+  p=ggplot()
+  p=p+scale_x_continuous(limits=c(ext_FR$range[1]/plotRatio,ext_FR$range[2]/plotRatio),expand=c(0,0)) # dimension de l'axe x
+  p=p+scale_y_continuous(limits=c(ext_FR$range[3],ext_FR$range[4]),expand=c(0,0)) # dimension de l'axe y
+  p=p+coord_equal()
+  p=p+theme(panel.background=element_blank(), # arriere-plan blanc
+            legend.position="none", # pas de legende
+            plot.margin=margin(c(0,0,0,0),unit="cm"), # pas de marges (respect du ratio X/Y France)
+            axis.line.x=element_blank(), # pas de ligne representant l'axe des x
+            axis.title.x=element_blank(), # pas de titre a l'axe des x
+            axis.ticks.x=element_blank(), # pas de graduation sur l axe des x
+            axis.text.x=element_blank(), # pas d'annotation sur l'axe des x
+            axis.line.y=element_blank(), # de meme pour l'axe y ....
+            axis.title.y=element_blank(),
+            axis.ticks.y=element_blank(),
+            axis.text.y=element_blank())
+  p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region)
+                   ,data=regionsplot,fill="grey",color="black",size=.75) # grisage des regions non observees
+  p=p+geom_polygon(aes(x=X/plotRatio,y=Y,group=Region),
+                   data=regionsplotPred,fill=regionsplotPred$Color,color="black",size=.75) # affichage de la prédiction dans les régions monitorées
+  p=p+geom_text(aes(x=as.numeric(quantile(ext_FR$x,.175,na.rm=T))/plotRatio,
+                    y=as.numeric(quantile(ext_FR$y,.975,na.rm=T))),
+                label=paste0("Prédiction ",namePhenotype," en ",(max(yearRange)+time),"\n",
+                             "(Indice de confiance = ",confidenceIndex,"/10)","\n",
+                             "(Apprentissage sur ",min(yearRange)," - ",max(yearRange),")"),size=5) # titre 
   
-  return(pList)
+  return(p)
 }
 
 
@@ -263,7 +257,7 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
 
 
 ### APPLICATION SUR NAVITAGEUR INTERNET ###
-if(interactive()){
+# if(interactive()){
   
   
   
@@ -281,8 +275,8 @@ if(interactive()){
                                        div(HTML("<p style=\"font-size:20px;font-weight:bold\">Importation des fichiers :</p>")),
                                        fluidRow(column(4,shinyFilesButton(id="file1",label="Importer un CSV",title="",multiple=FALSE,icon=icon("file-upload"))),
                                                 column(1,uiOutput("refreshData"))),
-                                       uiOutput("pluriannual"),
                                        htmlOutput("fileName"),
+                                       uiOutput("pluriannual"),
                                        hr(),
                                        uiOutput("annualStats"),
                                        uiOutput("phenotypeNameStats"),
@@ -304,19 +298,23 @@ if(interactive()){
                                        uiOutput("cartoSave")
                       ),
                       conditionalPanel(condition="input.tabs==3",
+                                       div(HTML("<p style=\"font-size:20px;font-weight:bold\">Sélection des données modélisées :</p>")),
                                        uiOutput("columnChoicePlotPred"),
                                        uiOutput("sliderY"),
                                        uiOutput("sliderConfidenceIndex"),
-                                       tableOutput("resultSummary"),
                                        hr(),
                                        div(HTML("<p style=\"font-size:20px;font-weight:bold\">Importation de variables explicatives :</p>")),
                                        fluidRow(column(4,shinyFilesButton(id="file2",label="Importer un Panel",title="",multiple=FALSE,icon=icon("file-upload"))),
                                                 column(1,uiOutput("deleteExplanatoryData"))),
                                        uiOutput("fileName2"),
-                                       uiOutput("showExplanatoryData"),
+                                       uiOutput("selectExplanatoryVars"),
+                                       hr(),
+                                       uiOutput("titleSummary"),
+                                       tableOutput("resultSummary"),
                                        hr(),
                                        uiOutput("predGO"),
                                        uiOutput("cartoPredSave"))),
+                    # !!!!!! AJOUTER UN QUATRIEME ONGLET POUR LA COMPARAISON DES STRATEGIES INTRA-PARCELLAIRES
                     
                     ## Panel affichant le fichier importé sour la forme d'un tableau ##
                     mainPanel(
@@ -339,11 +337,11 @@ if(interactive()){
       file1(input$file1)
     })
     
-    currentFilePath <- reactiveVal(NULL) # variable stockant le chemin du fichier importe
+    currentFilePath1 <- reactiveVal(NULL) # variable stockant le chemin du fichier importe
     data <- reactiveVal(NULL)
     observeEvent(c(input$file1,input$refresh),{
       # reset du data
-      currentFilePath(NULL)
+      currentFilePath1(NULL)
       data(NULL)
       
       # reset les valeurs réactives de l'onglet 1 : Tableau
@@ -366,10 +364,13 @@ if(interactive()){
       selectedColumnPlotPred(NULL)
       timeRange(NULL)
       confidenceIndex(NULL)
+      timeToPredict(NULL)
+      finalDataModel(NULL)
+      finalPanelModel(NULL)
+      finalModel(NULL)
       estimateSummary(NULL)
-      plotPredList(NULL)
       plotPred(NULL)
-      
+
       # reset des onglets
       removeTab(inputId="tabs",target="2")
       removeTab(inputId="tabs",target="3")
@@ -379,16 +380,16 @@ if(interactive()){
         return(NULL)
       }
 
-      currentFilePath(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
-      dTemp=read.table(currentFilePath(),header=TRUE,sep=";",
+      currentFilePath1(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
+      dTemp=read.table(currentFilePath1(),header=TRUE,sep=";",
                        stringsAsFactors=FALSE,na.strings=c("","-"))
       
-      if(!all(mandatoryVar%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importé par l'utilisateur
+      if(!all(mandatoryVar1%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importé par l'utilisateur
         sendSweetAlert(session,title="Erreur",
-                       text=paste0("Toutes les colonnes obligatoires (",paste(mandatoryVar,collapse=", "),") ne sont pas présentes dans le fichier."),
+                       text=paste0("Toutes les colonnes obligatoires (",paste(mandatoryVar1,collapse=", "),") ne sont pas présentes dans le fichier."),
                        type="error")
         file1(NULL)
-        currentFilePath(NULL)
+        currentFilePath1(NULL)
         return(NULL)
       }
       
@@ -440,7 +441,7 @@ if(interactive()){
     })
 
     output$fileName <- renderText({
-      return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath(),"</i></font>"))
+      return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath1(),"</i></font>"))
     })
     
     
@@ -625,8 +626,9 @@ if(interactive()){
           removeTab(inputId="tabs",target="3")
         }else{
           insertTab(inputId="tabs",
-                    tabPanel(title=h4("Prédiction"),value="3",fluidRow(column(12,align="center",uiOutput("tPredict")),
-                                                                       plotOutput("graphPred"))),
+                    tabPanel(title=h4("Prédiction"),value="3",fluidRow(column(8,offset=4,align="center",uiOutput("tPredict")),
+                                                                       column(4,uiOutput("slidersExplanatoryVars")),
+                                                                       column(8,plotOutput("graphPred")))),
                     target="2",
                     position="after")
         }
@@ -658,8 +660,8 @@ if(interactive()){
       d=data()
       return(selectInput("selectedColumnErr",
                          HTML("<p style=\"font-size:20px;font-weight:bold\">Affichage des erreurs :</p>"),
-                         colnames(d)[which(colnames(d)%in%mandatoryVar |
-                                             colnames(d)%in%accessoryVar |
+                         colnames(d)[which(colnames(d)%in%mandatoryVar1 |
+                                             colnames(d)%in%accessoryVar1 |
                                              colnames(d)%in%usualFrequencies)]))
     })
     
@@ -910,7 +912,6 @@ if(interactive()){
       if(plottedModality()!="All"){
         d=d[which(d$modalite==plottedModality()),]
       }
-      
 
       # Définition des lignes a retirer pour réaliser l'analyse spatiale #
       obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples Commune/Département du fichier importé
@@ -927,7 +928,6 @@ if(interactive()){
                  which(tempFreq>100 | tempFreq<0 | tempFreq!=round(tempFreq)))
 
       rmLines=names(table(c(missingGPS,unkwnFreq,which(is.na(d$code_essai))))) # bilan des lignes à retirer car indisposées a la modélisation spatiale
-
 
       # Alerte indiquant le nombre de fréquences retirées pour la cartographie #
       Nremoved=length(rmLines)
@@ -953,10 +953,8 @@ if(interactive()){
                      type="warning")
       d=d[-as.numeric(rmLines),]
       
-      
       # Debut du processus d'analyse spatiale #
       show_modal_spinner(spin="orbit",text="Analyse en cours",color="#08298A")
-      
       
       # Appariement des regions + coordonnees GPS aux donnees importees #
       longitude=rep(NA,nrow(d))
@@ -972,7 +970,6 @@ if(interactive()){
       d$longitude=longitude
       d$latitude=latitude
       d$region=region
-      
 
       # Run du modele spatial (estimation) #
       d[,plottedPhenotype()]=as.numeric(d[,plottedPhenotype()])
@@ -983,7 +980,6 @@ if(interactive()){
       
       predictions=predict(model,binding="fitted") # tableau des frequences predites par le modele spatial
       coordinates=colnames(attr(model,"info.uniqueGeo")[[1]]) # memoire du nom des coordonnees GPS
-      
 
       # Run du krigeage spatial (extrapolation) #
       krig=fillMAP(predictions,coordinates,color.range)
@@ -993,7 +989,6 @@ if(interactive()){
       if(length(which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)))>0){ # supression des points en dehors des ranges cartographiques, axe Y
         krig=krig[-which(krig$CY<min(regions$y,na.rm=T) | krig$CY>max(regions$y,na.rm=T)),]
       }
-      
       
       # Nouveau data contenant les frequences observees par essai, representees sous forme de camembert (4 categories: 0-25 25-50 50-75 75-100) #
       d2=rep(NA,7)
@@ -1013,22 +1008,18 @@ if(interactive()){
       d2=data.frame(d2)
       for(j in 2:ncol(d2)){d2[,j]=as.numeric(as.character(d2[,j]))}
 
-      
-      # Definition du ratio X/Y du plot (necessaire pour avoir des camemberts ronds et pas deformes/ovoides)
+      # Définition du ratio X/Y du plot (necéssaire pour avoir des camemberts ronds et pas déformés/ovoides)
       rangeX=ext_FR$range[1]-ext_FR$range[2]
       rangeY=ext_FR$range[3]-ext_FR$range[4]
       plotRatio=rangeX/rangeY
       
-      
-      # Enregistrement des regions monitorees et non monitorees #
+      # Enregistrement des régions monirées et non monitorées #
       regionsplotNOBSV=regionsplot[which(!regionsplot$Region%in%names(table(d$region))),]
       regionsplot$Region=as.factor(regionsplot$Region)
       regionsplotNOBSV$Region=as.factor(regionsplotNOBSV$Region)
       
-      
-      # Creation du graphique #
+      # Création du graphique #
       p=MakeCartoPlot(plottedPhenotype(),plottedYear(),plottedModality(),color.range,colorLegend,plotRatio,ext_FR,ext_FRplot,krig,d2,regionsplot,regionsplotNOBSV)
-      
       
       # Fin du processus d'analyse spatiale #
       remove_modal_spinner()
@@ -1207,6 +1198,7 @@ if(interactive()){
       }
       
       d=data()
+      # affichage des colones présentes dans le vecteur usualFrequencies
       return(selectInput("selectedColumnPlotPred","Fréquence prédite :",
                          colnames(d)[which(colnames(d)%in%usualFrequencies)]))
     })
@@ -1221,7 +1213,8 @@ if(interactive()){
         return(NULL)
       }
       d=data()
-
+      
+      # retrait des fréquences non numérique, <0%, >100%, non entières, <NA>
       d=d[which(check.numeric(d[,selectedColumnPlotPred()]) &
                   !is.na(d[,selectedColumnPlotPred()])),]
       d[,selectedColumnPlotPred()]=as.numeric(d[,selectedColumnPlotPred()])
@@ -1229,6 +1222,7 @@ if(interactive()){
                   d[,selectedColumnPlotPred()]<=100 &
                   d[,selectedColumnPlotPred()]==round(d[,selectedColumnPlotPred()])),]
 
+      # calcul de la proportion de données différentes de 0% et de 100% par année
       yearsBefore=table(d$annee)
       dTest=d[-which(d[,selectedColumnPlotPred()]==0 |
                        d[,selectedColumnPlotPred()]==100),]
@@ -1241,6 +1235,7 @@ if(interactive()){
       
       totalYears=names(result)
       
+      # rendu de la plage d'analyse optimale dans le slider (plus grande séquence temporelles où il n'y a pas plus de 90% des fréquences observées à 0% et 100%)
       if(length(which(!is.na(result)))>1){
         advicedYears=names(na.contiguous(result))
         return(sliderInput("timeRange","Plage temporelle d'apprentissage :",
@@ -1274,256 +1269,107 @@ if(interactive()){
     
     
     
-    ## Bouton permettant de lancer l'analyse dynamique des fréquences ##
-    output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
-      return(actionButton("doPred","Soumettre",icon("sync-alt")))
-    })
-    
-    
-    
-    ## Rendu du tableau des estimations (summary) du modèle dynamique ##
-    estimateSummary <- reactiveVal(NULL)
-    output$resultSummary <- renderTable({
-      return(estimateSummary())
-    },digits=3)
-    
-    
-    
-    ## Affichage du graphique des prédictions ##
-    # Slider permettant à l'utilisateur de choisir la prédiction à t+X #
-    output$tPredict <- renderUI({
-      if(is.null(plotPredList())){
-        return(NULL)
-      }
-      
-      return(sliderInput(inputId="timeToPredict",
-                         label="Afficher la prédiction à T+... :",
-                         min=1,
-                         max=5,
-                         value=1))
-    })
-    
-    # Choix des paramètres et rendu du plot de prédiction #
-    plotPredList <- reactiveVal(NULL)
-    plotPred <- reactiveVal(NULL)
-    output$graphPred <- renderPlot({
-      return(plotPred())
-    },height=750,width=750)
-    
-    observeEvent(c(input$timeToPredict,input$doPred),{
-      if(is.null(plotPredList())){
-        return(NULL)
-      }
-      if(is.null(input$timeToPredict)){
-        return(NULL)
-      }
-      
-      plotPred(plotPredList()[[input$timeToPredict]])
-    })
-    
-    
-    
-    ## Estimation du modèle dynamique GLM et calculs des cartographies de prédiction ##
-    observeEvent(input$doPred,{
-      d=data()
-
-      # Sélection des données pour la modélisation #
-      d=d[which(check.numeric(d[,selectedColumnPlotPred()]) &
-                  !is.na(d[,selectedColumnPlotPred()])),]
-      d[,selectedColumnPlotPred()]=as.numeric(d[,selectedColumnPlotPred()])
-      d=d[which(d[,selectedColumnPlotPred()]>=0 &
-                  d[,selectedColumnPlotPred()]<=100 &
-                  d[,selectedColumnPlotPred()]==round(d[,selectedColumnPlotPred()])),]
-
-      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples communes * numéro de département du fichier importé
-      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples communes * numéro de département du fichier gouvernemental
-      missingGPS=which(!obsCD%in%dtCD) # lignes du fichier importé correspondant a des couples commune*numero_departement inconnus
-      
-      rmLines=names(table(c(missingGPS,which(d$modalite!="TNT" | # lignes a retirer car indisposees a la modelisation
-                                               !d$annee%in%c(timeRange()[1]:timeRange()[2])))))
-      d=d[-as.numeric(rmLines),]
-
-      # Appariement des régions #
-      region=rep(NA,nrow(d))
-      for(i in 1:nrow(d)){
-        region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
-      }
-      d$region=region
-
-      # Création du data à analyser #
-      d$t=d$annee-timeRange()[1]
-      
-      d[which(d[,selectedColumnPlotPred()]==0),selectedColumnPlotPred()]=1 # !!!!!! A CHANGER ? : retirer les 0% et 100% du JDD et estimer leurs proportions annuelle
-      d[which(d[,selectedColumnPlotPred()]==100),selectedColumnPlotPred()]=99
-      
-      d$y=cbind(d[,selectedColumnPlotPred()],
-                100-d[,selectedColumnPlotPred()])
-      
-      d=d[,which(colnames(d)%in%c("t","region","y"))]
-      
-      # !!!!!!!! AVEC SUBSTANCES ACTIVES PAS TOUTES LES REGIONS (ex: LIMOUSIN)
-      # !!!!!!!! VERIFIER QUE TOUTES LES ANNEES-1 SONT BIEN DANS LE PANEL
-      tXregion=table(d$t,d$region)
-      meanOcc=round(colMeans(tXregion))
-      tXregion[which(tXregion!=0)]=1
-      timeOcc=colSums(tXregion)
-      keptReg=names(table(d$region))[which(
-        timeOcc>1 &
-        meanOcc>=confidenceIndex()
-      )]
-      d=d[which(d$region%in%keptReg),]
-      
-      d$region=as.factor(d$region)
-      basicLevels=names(table(d$region))
-
-      # Test si suffisament de régions différentes pour faire une prédiction régionalisée #
-      if(length(basicLevels)>1){
-        changedLevels=basicLevels[c(length(basicLevels),1:(length(basicLevels)-1))]
-      }else{
-        sendSweetAlert(session,title="Warning",
-                       text=paste0("Pas assez de points de monitoring pour réaliser 
-                                   une prédiction régionalisée avec un indice de confiance de ",
-                                   input$confidenceIndex,"."),
-                       type="error")
-        plotPredList(NULL)
-        plotPred(NULL)
-        estimateSummary(NULL)
-        return(NULL)
-      }
-
-      # Analyse 1 (levels de d$region=basicLevels) #
-      d1=d
-      contrasts(d1$region)="contr.sum"
-      model1=glm(y~region*t,
-                 data=d1,
-                 family=quasibinomial("logit"))
-      estimates1=summary(model1)$coefficients[-1,c(1,2,4)]
-      estimates1=estimates1[grep("t",rownames(estimates1)),]
-      RN1=rownames(estimates1)
-      RN1=sub(":t","",RN1)
-      RN1=basicLevels[as.numeric(str_extract(RN1,"[0-9]+"))]
-      RN1[which(is.na(RN1))]="FRANCE"
-      rownames(estimates1)=RN1
-      
-      # Analyse 2 (levels de d$region=changedLevels) #
-      d2=d
-      d2$region=factor(d2$region,
-                       levels=changedLevels)
-      contrasts(d2$region)="contr.sum"
-      model2=glm(y~region*t,
-                 data=d2,
-                 family=quasibinomial("logit"))
-      estimates2=summary(model2)$coefficients[-1,c(1,2,4)]
-      estimates2=estimates2[grep("t",rownames(estimates2)),]
-      RN2=rownames(estimates2)
-      RN2=sub(":t","",RN2)
-      RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
-      RN2[which(is.na(RN2))]="FRANCE"
-      rownames(estimates2)=RN2
-
-      # Fusion des summary de l'analyse 1 et 2 #
-      estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
-      colnames(estimates)=c("Estimation","Ecart-type","P-value")
-      estimates=estimates[!grepl(".1",rownames(estimates)),]
-
-      # Calcul des seuils de significativité #
-      estimates$"Signif."=sapply(estimates$"P-value",function(x){
-        if(x<=0.001){return("***")}
-        else if(x<=0.025){return("**")}
-        else if(x<=0.05){return("*")}
-        else if(x<=0.1){return(".")}
-        else{return("")}
-      })
-      estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
-      estimateSummary(estimates) # stockage du data contenant le summary
-      
-      # Calcul des fréquences régionales prédites par le modèle GLM #
-      predTable=expand.grid(t=c(c(1:5)+max(as.numeric(names(table(d$t))))),
-                  region=names(table(d$region)))
-      predTable=data.frame(predTable,Prediction=(predict.glm(model1,predTable,"response")*100))
-      predTable$Prediction=round(predTable$Prediction)
-
-      # Construction de la liste des graphiques de prédiction (de t+1 à t+5) #
-      colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
-      color.range=colfunc(101) # background colors
-      
-      rangeX=ext_FR$range[1]-ext_FR$range[2]
-      rangeY=ext_FR$range[3]-ext_FR$range[4]
-      plotRatio=rangeX/rangeY
-      
-      regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(predTable$region))),]
-      
-      pList=MakePredictionPlots(selectedColumnPlotPred(),
-                                c(timeRange()[1]:timeRange()[2]),
-                                color.range,
-                                plotRatio,
-                                ext_FR,
-                                regionsplot,
-                                regionsplotPred,
-                                predTable,
-                                confidenceIndex())
-
-      plotPredList(pList) # stockage de la liste de plot des fréquences prédites
-      
-      # !!!!! (NULL DEVIANCE - RESIDUAL DEVIANCE)/NULL DEVIANCE ou R²
-    })
-    
-    
-    ## Choix de l'utilisateur pour enregistrer les cartes de prédiction au format PDF ##
-    output$cartoPredSave <- renderUI({
-      if(is.null(plotPredList())){
-        return(NULL)
-      }
-      
-      return(actionButton("exportPrediction","Exporter les prédictions au format PDF",icon("download")))
-    })
-    
-    observeEvent(input$exportPrediction,{
-      savePath=choose.dir()
-      if(is.na(savePath)){
-        return(NULL)
-      }else{
-        pdf(paste0(savePath,"\\","Predictions_",selectedColumnPlotPred(),"_",
-                   (timeRange()[2]+1),"-",(timeRange()[2]+length(plotPredList())),
-                   "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
-        for(i in 1:length(plotPredList())){
-          plot(plotPredList()[[i]])
-        }
-        dev.off()
-      }
-    })
-    
-    
-    
-    ## Importation de données explicatives pour le modèle de prédiction ##
-    shinyFileChoose(input,"file2",roots=c(wd='.'),filetypes=c("csv")) # bouton d'importation des fichiers CSV
+    ## Importation de données explicatives ##
+    # Bouton d'importation d'un fichier CSV #
+    shinyFileChoose(input,"file2",roots=c(wd='.'),filetypes=c("csv")) 
     file2 <- reactiveVal(NULL)
     observeEvent(input$file2,{
       file2(input$file2)
     })
     
-    currentFilePath2 <- reactiveVal(NULL) # variable stockant le chemin du fichier importé
+    # Importation du fichier choisi par l'utilisateur dans la variable data2 #
+    currentFilePath2 <- reactiveVal(NULL)
     data2 <- reactiveVal(NULL)
+    
     observeEvent(input$file2,{
+      # reset du data
+      data2(NULL)
+      
       inFile=parseFilePaths(roots=c(wd='.'),file2())
       if(length(inFile$datapath)==0){
         return(NULL)
       }
       
+      # importation
       currentFilePath2(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
       dTemp=read.table(currentFilePath2(),header=TRUE,sep=";",
-                       stringsAsFactors=FALSE,na.strings=c("","-"))
+                       stringsAsFactors=FALSE,na.strings=c(""))
+      
+      # test de la bonne "forme" du fichier (noms de colonnes)
+      if(!all(mandatoryVar2%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importé par l'utilisateur
+        sendSweetAlert(session,title="Erreur",
+                       text=paste0("Toutes les colonnes obligatoires (",paste(mandatoryVar2,collapse=", "),") ne sont pas présentes dans le fichier."),
+                       type="error")
+        file2(NULL)
+        currentFilePath2(NULL)
+        return(NULL)
+      }
+      
+      # toutes les substances actives au MOA inconnu sont classées dans "OTHER"
+      dTemp$moa[which(is.na(dTemp$moa))]="OTHER"
       
       data2(dTemp)
     })
-
-    output$showExplanatoryData <- renderTable({
+    
+    # Variable stockant le nom du fichier importé pour affichage dans l'application #
+    output$fileName2 <- renderText({
+      return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath2(),"</i></font>"))
+    })
+    
+    # Liste à choix des variables explicatives à considérer dans le modèle #
+    output$selectExplanatoryVars <- renderUI({
       if(is.null(data2())){
         return(NULL)
       }
-      return(head(data2()))
+      
+      # adaptation des substances actives proposées à la timeRange considérée par l'utilisateur
+      panel=data2()
+      if(!is.null(timeRange())){
+        panel=panel[which(panel$annee%in%c(timeRange()[1]:timeRange()[2])),]
+      }
+
+      # liste des substances actives, associées à leur MOA
+      agg=aggregate(list(moa=panel$moa),list(matiere_active=panel$matiere_active),function(x){
+        paste0(unique(x))
+      })
+      namesMoa=names(table(agg$moa))
+      listVar=sapply(namesMoa,function(x){
+        names(table(agg$matiere_active[which(agg$moa==x)]))
+      })
+      
+      # ajout de l'information concernant le poids relatif de la substance active au sein du MOA
+      aggMOA=aggregate(list(ha_deployes=panel$ha_deployes),list(moa=panel$moa),"sum")
+      aggMOL=aggregate(list(ha_deployes=panel$ha_deployes),list(matiere_active=panel$matiere_active,moa=panel$moa),"sum")
+      aggMOL$ha_deployes=apply(aggMOL,1,function(x){
+        round((as.numeric(x["ha_deployes"])/aggMOA$ha_deployes[which(aggMOA$moa==x["moa"])])*100,2)
+      })
+      
+      listVar=lapply(listVar,function(x){
+        x=sapply(x,function(w){
+          percent=aggMOL$ha_deployes[which(aggMOL$matiere_active==w)]
+          if(!is.na(percent)){paste0(w," (",percent,"%)")}else{paste0(w," (NaN)")}
+        })
+        return(unname(x))
+      })
+      for(i in 1:length(listVar)){listVar[[i]]=as.list(listVar[[i]])}
+      
+      # création du bouton de sélection multiple
+      return(selectInput("explanatoryVars","Choix des variables explicatives :",
+                         listVar,
+                         multiple=TRUE))
+    })
+    explanatoryVars <- reactiveVal(NULL)
+    observeEvent(c(input$explanatoryVars,input$deleteExpData),{
+      if(is.null(data2())){
+        explanatoryVars(NULL)
+      }else{
+        explanatoryVars(unname(sapply(input$explanatoryVars,function(x){
+          substr(x,1,(as.numeric(gregexpr(" \\(",x))-1))
+        })))
+      }
     })
     
+    # Bouton permettant de supprimer le fichier et les variables explicatives #
     output$deleteExplanatoryData <- renderUI({
       if(is.null(data2())){
         return(NULL)
@@ -1537,20 +1383,504 @@ if(interactive()){
       data2(NULL)
     })
     
-    output$fileName2 <- renderText({
-      return(paste0("<font color=\"#5A5AFF\"><i>",currentFilePath2(),"</i></font>"))
+    
+    
+    ## Bouton permettant de lancer l'analyse dynamique des fréquences par le modèle GLM ##
+    output$predGO <- renderUI({ # affiche le bouton Soumettre pour la creation de la cartographie
+      return(actionButton("doPred","Soumettre",icon("sync-alt")))
     })
     
     
     
-    ## Arret de l'application ##
+    ## Estimation du modèle dynamique GLM ##
+    finalDataModel <- reactiveVal(NULL)
+    finalPanelModel <- reactiveVal(NULL)
+    finalModel <- reactiveVal(NULL)
+    finalModelR2 <- reactiveVal(NULL)
+    estimateSummary <- reactiveVal(NULL)
+    plotPred <- reactiveVal(NULL)
+    
+    observeEvent(input$doPred,{
+      # Reset des résultats de la précédente modélisation 
+      timeToPredict(NULL)
+      finalDataModel(NULL)
+      finalPanelModel(NULL)
+      finalModel(NULL)
+      finalModelR2(NULL)
+      estimateSummary(NULL)
+      timeToPredict(NULL)
+      plotPred(NULL)
+
+      # Teste si une plage temporelle d'étude existe pour le phénotype considéré #
+      if(is.null(timeRange())){
+        sendSweetAlert(session,title="Error",
+                       text=paste0("Plage temporelle d'étude inexistante."),
+                       type="error")
+        return(NULL)
+      }
+      
+      d=data()
+      
+      # Sélection des données pour la modélisation #
+      # retrait des fréquences non numérique, <0%, >100%, non entières, <NA> + transformation de la colonne en numeric
+      d=d[which(check.numeric(d[,selectedColumnPlotPred()]) &
+                  !is.na(d[,selectedColumnPlotPred()])),]
+      d[,selectedColumnPlotPred()]=as.numeric(d[,selectedColumnPlotPred()])
+      d=d[which(d[,selectedColumnPlotPred()]>=0 &
+                  d[,selectedColumnPlotPred()]<=100 &
+                  d[,selectedColumnPlotPred()]==round(d[,selectedColumnPlotPred()])),]
+      
+      # retrait des fréquences où l'affiliation par commune*numero_département est inconnue (donc avec une affiliation régionale incertaine)
+      obsCD=paste(d$commune,d$numero_departement,sep=" * ") # couples communes*numéro_département du fichier importé
+      dtCD=paste(Q$nom_commune,sapply(Q$code_postal,function(x){substr(x,1,2)}),sep=" * ") # couples communes*numéro_département du fichier gouvernemental
+      missingGPS=which(!obsCD%in%dtCD) # lignes correspondantes à des couples commune*numero_departement inconnus
+      
+      rmLines=names(table(c(missingGPS,which(d$modalite!="TNT" |
+                                               !d$annee%in%c(timeRange()[1]:timeRange()[2])))))
+      d=d[-as.numeric(rmLines),]
+
+      # Appariement des acronymes régionnaux #
+      region=rep(NA,nrow(d))
+      for(i in 1:nrow(d)){
+        region[i]=deptReg$Region[which(deptReg$Departement==as.character(d$numero_departement[i]))]
+      }
+      d$region=region
+      
+      # Création du data à analyser #
+      d$t=d$annee-timeRange()[1]
+      
+      # !!!!!!! CHANGER POUR NE PAS RETIRER/MODIFIER LES DONNEES MAIS SIMPLEMENT ESTIMER L'EVOLUTION DE LA PROPORTION EN 0% et 100% DANS LES DONNEES ? (avec modèle lm en parallèle)
+      d[which(d[,selectedColumnPlotPred()]==0),selectedColumnPlotPred()]=1 # !!!!!! 
+      d[which(d[,selectedColumnPlotPred()]==100),selectedColumnPlotPred()]=99
+      
+      d$y=cbind(d[,selectedColumnPlotPred()],
+                100-d[,selectedColumnPlotPred()])
+      d=d[,which(colnames(d)%in%c("t","region","y"))]
+      
+      # sous-sélection des régions avec une intensité de monitoring suffisante (au moins 2 années + un nombre de points moyens par an >= au confidenceIndex indiqué par l'utilisateur)
+      tXregion=table(d$t,d$region)
+      meanOcc=round(colMeans(tXregion))
+      tXregion[which(tXregion!=0)]=1
+      timeOcc=colSums(tXregion)
+      keptReg=names(table(d$region))[which(
+        timeOcc>1 &
+          meanOcc>=confidenceIndex()
+      )]
+      d=d[which(d$region%in%keptReg),]
+
+      # !!!!!!! AJOUTER UN EFFET ALEATOIRE DE LA VARIETE ? (problème <NA>); ET/OU DE LA COMMUNE ? (voir s'il y a assez de répétition)
+      # !!!!!!! AJOUTER DE LA SELECTION DE VARIABLE ? (cf. partie mise en commentaire)
+      # !!!!!!! AJOUTER LA CONTRAINTE DE "PARAMETRES > 0" POUR LES QOI OU SDHI ? (résistances qualitatives)
+      # !!!!!!! AJOUTER AUX COVARIABLES LA SOMME DES INTENSITES REGIONALES PAR MOA ?
+      # !!!!!!! AJOUTER UNE GRAPHIQUE DES CORRELATIONS DES COVARIABLES EXPLICATIVES OBSERVEES DANS LE PANEL EN ENTREE DU MODELE ?
+      # !!!!!!! CENTRER ET REDUIRE LES VARIABLES EXPLICATIVES ? (attention la fonction qui construit les graphiques de prédiction ne sera plus fonctionnelle)
+      if(length(explanatoryVars())==0){
+        d$region=as.factor(d$region)
+        basicLevels=names(table(d$region))
+        
+        # Test si il y a plus d'une région afin de réaliser une analyse régionalisée #
+        if(length(basicLevels)>1){
+          changedLevels=basicLevels[c(length(basicLevels),1:(length(basicLevels)-1))]
+        }else{
+          sendSweetAlert(session,title="Error",
+                         text=paste0("Pas assez de points de monitoring pour réaliser 
+                                   une prédiction régionalisée avec un indice de confiance de ",
+                                     input$confidenceIndex,"."),
+                         type="error")
+          return(NULL)
+        }
+        
+        # Analyse 1 (levels de d$region=basicLevels) #
+        d1=d
+        contrasts(d1$region)="contr.sum"
+        model1=glm(y~region*t,
+                   data=d1,
+                   family=quasibinomial("logit"))
+        estimates1=summary(model1)$coefficients[-1,c(1,2,4)]
+        estimates1=estimates1[grep("t",rownames(estimates1)),]
+        RN1=rownames(estimates1)
+        RN1=sub(":t","",RN1)
+        RN1=basicLevels[as.numeric(str_extract(RN1,"[0-9]+"))]
+        RN1[which(is.na(RN1))]="FRANCE"
+        rownames(estimates1)=RN1
+        
+        # Analyse 2 (levels de d$region=changedLevels) #
+        d2=d
+        d2$region=factor(d2$region,
+                         levels=changedLevels)
+        contrasts(d2$region)="contr.sum"
+        model2=glm(y~region*t,
+                   data=d2,
+                   family=quasibinomial("logit"))
+        estimates2=summary(model2)$coefficients[-1,c(1,2,4)]
+        estimates2=estimates2[grep("t",rownames(estimates2)),]
+        RN2=rownames(estimates2)
+        RN2=sub(":t","",RN2)
+        RN2=changedLevels[as.numeric(str_extract(RN2,"[0-9]+"))]
+        RN2[which(is.na(RN2))]="FRANCE"
+        rownames(estimates2)=RN2
+        
+        # Fusion des summary de l'analyse 1 et 2 #
+        estimates=data.frame(rbind(round(estimates1,3),round(estimates2,3)))
+        colnames(estimates)=c("Estimation","Ecart-type","P-value")
+        estimates=estimates[!grepl(".1",rownames(estimates)),]
+
+        # Calcul des seuils de significativité #
+        estimates$"Signif."=sapply(estimates$"P-value",function(x){
+          if(x<=0.001){return("***")}
+          else if(x<=0.025){return("**")}
+          else if(x<=0.05){return("*")}
+          else if(x<=0.1){return(".")}
+          else{return("")}
+        })
+        estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
+        
+        # Stockage des informations nécéssaires à l'affichage des estimations et du calcul des prédictions #
+        estimateSummary(estimates) # stockage du data contenant le summary
+        finalDataModel(d1) # stockage du data modélisé final
+        finalModel(model1) # stockage du modèle final
+        finalModelR2(round((summary(model1)$null.deviance-summary(model1)$deviance)/
+                             summary(model1)$null.deviance,3)) # stockage du pseudo R² ~ (NULL DEVIANCE - RESIDUAL DEVIANCE)/NULL DEVIANCE
+
+      }else{
+        # Sous-sélection des données au sein du panel importé par l'utilisateur #
+        panel=data2()
+        panel=panel[which(panel$matiere_active%in%explanatoryVars() &
+                            panel$annee%in%c(timeRange()[1]:(timeRange()[2]-1))),]
+        panel=panel[,which(colnames(panel)%in%c("matiere_active","region","annee","ha_dc"))]
+        
+        # Stoppe l'analyse si toutes les années nécessaires à la modélisation ne sont pas présentes dans le data des variables explicatives #
+        if(!all(c(timeRange()[1]:(timeRange()[2]-1))%in%panel$annee)){
+          unknwYear=names(table(c(timeRange()[1]:(timeRange()[2]-1))[
+            which(!c(timeRange()[1]:(timeRange()[2]-1))%in%panel$annee)]))
+          sendSweetAlert(session,title="Error",
+                         text=paste0("Pas de données concernant les variables explicatives dans la(es) année(s) suivante(s) : ",
+                                     paste(unknwYear,collapse=" "),". Analyse interrompue."),
+                         type="error")
+          return(NULL)
+        }
+        
+        # Renvoie une erreur si l'information pour certaines régions sont manquantes dans le data des variables explicatives #
+        if(!all(d$region%in%panel$region)){
+          unknwRegion=names(table(d$region[which(!d$region%in%panel$region)]))
+          sendSweetAlert(session,title="Warning",
+                         text=paste0("Pas de données concernant les variables explicatives dans la(es) région(s) suivante(s) : ",
+                                     paste(unknwRegion,collapse=" "),". Les données concernées on été retirées de l'analyse."),
+                         type="warning")
+          d=d[-which(d$region%in%unknwRegion),]
+        }
+
+        # Calcul de la somme des intensité de sélection dans les régions données entre T=0 et T=t-1 #
+        panel$annee=panel$annee-timeRange()[1]
+        
+        # saveRDS(panel,"panel.rds")
+        # saveRDS(d,"d.rds")
+        # panel=readRDS("panel.rds")
+        # d=readRDS("d.rds")
+        
+        for(i in names(table(panel$matiere_active))){
+          newCol=apply(d,1,function(x,i){
+            reg=x["region"]
+            time=as.numeric(x["t"])
+            
+            if(time==0){
+              return(0)
+            }else{
+              panelTemp=panel[which(panel$matiere_active==i &
+                                      panel$region==reg &
+                                      panel$annee%in%c(0:(time-1))),]
+              return(sum(panelTemp$ha_dc))
+            }
+          },i=i)
+          d=cbind(d,newCol)
+          colnames(d)[ncol(d)]=i
+        }
+        
+        # Analyse #
+        modelFormula=as.formula(paste0("y~t+",paste(colnames(d)[4:ncol(d)],collapse="+")))
+
+        model=glm(modelFormula,
+                  data=d,
+                  family=quasibinomial("logit"),
+                  na.action=na.fail)
+        summary(model)
+
+        # Sélection des variables explicatives #
+        # # https://taddallas.github.io/papers/modselect.pdf
+        # # https://cran.r-project.org/web/packages/bbmle/vignettes/quasi.pdf
+        # # https://rdrr.io/cran/MuMIn/man/QAIC.html
+        # 
+        # # solution 1
+        # hacked.quasibinomial=function(...){ 
+        #   res=quasibinomial(...) 
+        #   res$aic=binomial(...)$aic 
+        #   res
+        # }
+        # model=update(model,family=hacked.quasibinomial())
+        # ma=model.avg(get.models(dredge(model,fixed=c("t"),rank="QAIC",chat=summary(model)$dispersion),subset=TRUE))
+        # summary(ma)
+        # 
+        # # solution 2
+        # params=colnames(d)[4:ncol(d)]
+        # paramsList=do.call(c,lapply(seq_along(params),combn,x=params,simplify=FALSE))
+        # qAICData=lapply(paramsList,function(x){
+        #   modelFormula=paste0("y~t+",paste(x,collapse="+"))
+        # 
+        #   model=glm(as.formula(modelFormula),
+        #             data=d,
+        #             family=quasibinomial("logit"))
+        #   
+        #   minus2logLik=model$deviance
+        #   cHat=summary(model)$dispersion
+        #   n=dim(d)[1]
+        #   k=dim(summary(model)$coefficients)[1]
+        #   
+        #   qAIC=(minus2logLik/cHat)+(2*k)
+        #   qAICc=(minus2logLik/cHat)+((2*n*k)/(n-k-1))
+        #   
+        #   return(c(modelFormula,qAIC,qAICc))
+        # })
+        # qAICData=as.data.frame(matrix(unlist(qAICData),ncol=3,byrow=TRUE))
+        # colnames(qAICData)=c("formula","qAIC","qAICc")
+        # qAICData$qAIC=as.numeric(qAICData$qAIC)
+        # qAICData$qAICc=as.numeric(qAICData$qAICc)
+        # 
+        # # qAICData=qAICData[order(qAICData$qAIC),]
+        # qAICData=qAICData[order(qAICData$qAICc),]
+        # qAICData
+        
+        # Extraction du summary #
+        estimates=data.frame(summary(model)$coefficients[-1,c(1,2,4)])
+        rownames(estimates)[which(rownames(estimates)=="t")]="Growth constant"
+        colnames(estimates)=c("Estimation","Ecart-type","P-value")
+        
+        # Calcul des seuils de significativité #
+        estimates$"Signif."=sapply(estimates$"P-value",function(x){
+          if(x<=0.001){return("***")}
+          else if(x<=0.025){return("**")}
+          else if(x<=0.05){return("*")}
+          else if(x<=0.1){return(".")}
+          else{return("")}
+        })
+        estimates=data.frame(cbind("Paramètre"=rownames(estimates),estimates))
+
+        estimateSummary(estimates) # stockage du data contenant le summary
+        finalDataModel(d) # stockage du data modélisé final
+        finalPanelModel(panel) # stockage du panel utilisé pour la modélisation
+        finalModel(model) # stockage du modèle final
+        finalModelR2(round((summary(model)$null.deviance-summary(model)$deviance)/
+                             summary(model)$null.deviance,3)) # stockage du pseudo R² ~ (NULL DEVIANCE - RESIDUAL DEVIANCE)/NULL DEVIANCE
+      }
+    })
+    
+    
+    
+    ## Rendu du tableau des estimations (summary) du modèle dynamique ##
+    output$resultSummary <- renderTable({
+      return(estimateSummary())
+    },digits=3)
+    
+    output$titleSummary <- renderText({
+      if(is.null(estimateSummary())){
+        return(NULL)
+      }
+      
+      return(HTML("<p style=\"font-size:20px;font-weight:bold\">Résultats du modèle :</p>
+                  <p style=\"font-weight:bold\">pseudo-R² = ",finalModelR2(),"</p>"))
+    })
+    
+    
+    
+    ## Paramètres d'affichage du graphique des prédictions ##
+    # Slider permettant à l'utilisateur de choisir la prédiction à t+X #
+    output$tPredict <- renderUI({
+      if(is.null(finalModel())){
+        return(NULL)
+      }
+      
+      return(sliderInput(inputId="timeToPredict",
+                         label="Afficher la prédiction à T+... :",
+                         min=1,
+                         max=5,
+                         value=1))
+    })
+    timeToPredict <- reactiveVal(NULL)
+    observeEvent(input$timeToPredict,{
+      timeToPredict(input$timeToPredict)
+    })
+    
+    # Sliders permettant de moduler les quantités de matières actives dans les années prédites #
+    output$slidersExplanatoryVars <- renderUI({
+      if(is.null(finalModel())){
+        return(NULL)
+      }
+
+      # isolation des sliders des variables explicatives renseignées par l'utilisateur, les sliders ne sont redéfinis seulement lorsqu'il y a un nouveau finalModel()
+      isolate({
+        explanatoryVars=as.list(explanatoryVars())
+        sliderList=lapply(explanatoryVars,function(x){
+          sliderInput(inputId=paste0(x),
+                      label=div(HTML(paste0("Utilisation de ",x,"<br> (% par rapport à ",timeRange()[2]-1,"):"))),
+                      min=0,
+                      max=200,
+                      value=100)
+        })
+        sliderList=list(actionButton("refreshPrediction",
+                                     "Afficher/Rafraichir la prédiction"),
+                        div(HTML("<br>")),
+                        sliderList)
+
+        return(tagList(sliderList))
+      })
+    })
+    
+    # Construction du tableau des prédictions, calcul des prédictions à partir du modèle et du plot #
+    observeEvent(c(input$refreshPrediction),{
+      if(is.null(finalModel())){
+        return(NULL)
+      }
+      if(input$refreshPrediction==0){
+        return(NULL)
+      }
+
+      isolate({
+        if(is.null(timeToPredict())){
+          timeToPredict(1)
+        }
+        
+        colfunc=colorRampPalette(c(color0(),color25(),color50(),color75(),color100())) 
+        color.range=colfunc(101) # background colors
+        
+        rangeX=ext_FR$range[1]-ext_FR$range[2]
+        rangeY=ext_FR$range[3]-ext_FR$range[4]
+        plotRatio=rangeX/rangeY
+        
+        d=finalDataModel()
+        model=finalModel()
+        
+        if(length(explanatoryVars())==0){
+          # construction du data contenant les données à prédire
+          predTable=data.frame(cbind(t=rep((max(d$t)+timeToPredict()),length(table(d$region))),
+                                     region=names(table(d$region))))
+          predTable$t=as.numeric(predTable$t)
+          predTable$region=as.factor(predTable$region)
+          
+          # calcul des fréquences régionales prédites par le modèle GLM
+          predTable=data.frame(predTable,Prediction=(predict.glm(model,predTable,"response")*100))
+          predTable$Prediction=round(predTable$Prediction)
+          
+          # construction du graphique de prédiction
+          regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(d$region))),]
+          
+          p=MakePredictionPlot(selectedColumnPlotPred(),
+                               c(timeRange()[1]:timeRange()[2]),
+                               timeToPredict(),
+                               color.range,
+                               plotRatio,
+                               ext_FR,
+                               regionsplot,
+                               regionsplotPred,
+                               predTable,
+                               confidenceIndex())
+          
+          # stockage du graphique de prédiction
+          plotPred(p)
+        }else{
+          panel=finalPanelModel()
+          
+          # teste si les sliders d'utilisation des substances actives retournent bien des valeurs pour la prédiction
+          params=rownames(summary(model)$coefficients)
+          params=params[-which(params%in%c("(Intercept)","t"))]
+          if(is.null(input[[params[1]]])){
+            return(NULL)
+          }
+
+          # construction du data contenant les données à prédire
+          predTable=data.frame(cbind(t=rep((max(d$t)+timeToPredict()),length(table(d$region))),
+                                     region=names(table(d$region))))
+
+          panelLastUses=panel[which(panel$annee==max(panel$annee)),]
+          panelSumUses=aggregate(list(ha_dc=panel$ha_dc),
+                                 list(matiere_active=panel$matiere_active,
+                                      region=panel$region),
+                                 "sum")
+          for(i in params){
+            predCol=apply(predTable,1,function(x){
+              lastUse=panelLastUses$ha_dc[which(panelLastUses$matiere_active==i &
+                                                  panelLastUses$region==x["region"])]
+              sumUse=panelSumUses$ha_dc[which(panelSumUses$matiere_active==i &
+                                                panelSumUses$region==x["region"])]
+              
+              predUse=sumUse+lastUse*(input[[i]]/100)*timeToPredict()
+              return(predUse)
+            })
+            predTable=cbind(predTable,predCol)
+            colnames(predTable)[ncol(predTable)]=i
+          }
+
+          predTable$t=as.numeric(predTable$t)
+          predTable$region=as.factor(predTable$region)
+          
+          # calcul des fréquences régionales prédites par le modèle GLM
+          predTable=data.frame(predTable,Prediction=(predict.glm(model,predTable,"response")*100))
+          predTable$Prediction=round(predTable$Prediction)
+          
+          # construction du graphique de prédiction
+          regionsplotPred=regionsplot[which(regionsplot$Region%in%names(table(d$region))),]
+
+          p=MakePredictionPlot(selectedColumnPlotPred(),
+                               c(timeRange()[1]:timeRange()[2]),
+                               timeToPredict(),
+                               color.range,
+                               plotRatio,
+                               ext_FR,
+                               regionsplot,
+                               regionsplotPred,
+                               predTable,
+                               confidenceIndex())
+          
+          # stockage du graphique de prédiction
+          plotPred(p)
+        }
+      })
+    })
+    
+    # Rendu du plot de prédiction #
+    output$graphPred <- renderPlot({
+      return(plotPred())
+    },height=750,width=750)
+    
+    
+    
+    ## Choix de l'utilisateur pour enregistrer la carte de prédiction au format PDF ##
+    output$cartoPredSave <- renderUI({
+      if(is.null(plotPred())){
+        return(NULL)
+      }
+      return(actionButton("exportPrediction","Exporter la prédiction au format PDF",icon("download")))
+    })
+    
+    observeEvent(input$exportPrediction,{
+      savePath=choose.dir()
+      if(is.na(savePath)){
+        return(NULL)
+      }else{
+        pdf(paste0(savePath,"\\","Prediction_",selectedColumnPlotPred(),
+                   "_",(timeRange()[2]+timeToPredict()),
+                   "_(",format(Sys.time(),"%d-%m-%Y"),").pdf"))
+        plot(plotPred())
+        dev.off()
+      }
+    })
+    
+    
+    
+  
+    ## ARRET DE L'APPLICATION ##
     # Lorsque l'utilisateur quitte l'application (ferme l'onglet dans le navigateur WEB), l'application s'arrête automatiquement #
     session$onSessionEnded(function(){
       stopApp()
     })
-    
-    
-    
   }
   
   
@@ -1559,4 +1889,4 @@ if(interactive()){
   ### Run de l'application ###
   # Ligne de commande qui permet de lancer l'application dans le navigateur web par défaut #
   runApp(list(ui=ui,server=server),launch.browser=TRUE)
-}
+# }

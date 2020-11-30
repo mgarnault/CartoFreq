@@ -115,7 +115,7 @@ Cliquer sur la palette pour redéfinir les couleurs aux seuil : 0%, 25%, 50%, 75
 &nbsp;
 
 #### > Cliquer sur le bouton *Soumettre*.
-L'application affiche automatiquement le nombre de fréquences (hors NA), qui ont dûes être écartées de l'analyse par faute et/ou défaut d'information dans les autres colonnes du JDD. La carte affiche les fréquences extrapolées sur le territoire français à partir des points d'observations des essais. Chaque point correspond à un essai (ou commune, *cf.* fin de la Partie1-Chapitre 1). Dans chaque point, sont représentées sous forme de camembert les fréquences observées. Les camemberts représentent la fraction de fréquences observées entre 0-25%, 26-50%, 51-75%, 76-100%. Les couleurs choisies pour représenter ces quatres catégories correspondent respectivement aux couleurs des fréquences 12%, 37%, 63% et 88% (*i.e.* couelurs des fréquences médianes de chacune des catégories).
+L'application affiche automatiquement le nombre de fréquences (hors NA), qui ont dûes être écartées de l'analyse par faute et/ou défaut d'information dans les autres colonnes du JDD. La carte affiche les fréquences extrapolées sur le territoire français à partir des points d'observations des essais. Chaque point correspond à un essai (ou commune, *cf.* fin de la Partie1-Chapitre 1). Dans chaque point, sont représentées sous forme de camembert les fréquences observées. Les camemberts représentent la fraction de fréquences observées entre 0-25%, 26-50%, 51-75%, 76-100%. Les couleurs choisies pour représenter ces quatres catégories correspondent respectivement aux couleurs des fréquences 12%, 37%, 63% et 88% (*i.e.* couleurs des fréquences médianes de chacune des catégories).
 
 
 &nbsp;
@@ -175,11 +175,13 @@ L'indice de confiance correspond au nombre minimal de point observé en moyenne 
 #### > Lancer l'analyse : cliquer sur le bouton *Soumettre*.
 Le tableau qui s'affiche sur le panneau de droite correspond à l'estimation des taux de croissance en échelle logit : la ligne FRANCE correspond au taux de croissance global national : une valeur positive (respectivement négative) implique une augmentation (respectivement diminution) globale de la fréquence en France. Les autres lignes correspondent au taux de croissance régionnaux **relativement** au taux national. Les taux de croissance régionnaux absolus s'obtiennent en sommant le taux de croissance national au taux relatifs régionnaux.
 
-<u>Exemple :</u> Si on observe **+0.86** (\*\*\*) en FRANCE, **-0.5** () dans REGION1 et **+0.32** (\*) dans REGION2, cela signifie que la fréquence augmente de manière significative en FRANCE (**+0.86**), que la fréquence augmente également dans REGION1 mais que la dynamqiuye régionale ne diffère pas significativement de la tendance nationale (+0.68-0.5=**+0.36**), alors que la sélection du phénotype dans la REGION2 est significativement accélérée par rapport à la tendance nationale (+0.86+0.32=**+1.18**).
+Exemple : Si on observe **+0.86** (\*\*\*) en FRANCE, **-0.5** ( ) dans REGION1 et **+0.32** (\*) dans REGION2, cela signifie que la fréquence augmente de manière significative en FRANCE (**+0.86**), que la fréquence augmente également dans REGION1 mais que la dynamqiuye régionale ne diffère pas significativement de la tendance nationale (+0.68-0.5=**+0.36**), alors que la sélection du phénotype dans la REGION2 est significativement accélérée par rapport à la tendance nationale (+0.86+0.32=**+1.18**).
 
 La fitness relative apparente du phénotype (*i.e.* vitesse relative à laquelle le phénotype évolue dans la population vis-à-vis des autres phénotypes complémentaires dans la population : résistant vs. sensible pour les phénotypes qualitatifs; résistant 1 vs. autres résistants pour les phénotypes quantitatifs), s'obtient en prenant l'exponentielle des taux de croissance du tableau. Si on reprend le même exemple on a donc un phénotype de résistance qui croit exp(0.86)=**2.36** fois plus vite que le/les phénotypes complémentaires dans la popuation. Une fitness relative apparente <1 indique une décroissance de la fréquence dasn la population, >1 indique une augmentation de la fréquence dans la population, ~1 indique une fréquence stable.
 
 L'EFD (Expected Frequency Difference), correspond au changement de fréquence observé entre deux années pour une population initialement prise à sa moyenne observée dans les données. Si la fréquence moyenne du phénotype étudié dans les données est de 25% (F=0.25), l'EFD se calcule comme suit : (*logit*<sup>-1</sup>(*logit*(F) + 0.86) - F) \* 100=**+19%** si on reprend l'exemple précédent. Ceci indique que globalement en France, on tend à observer une augmentation annuelle de 19 point de fréquence pour le phénotype considéré.
+
+Il est a noté que seules les fréquences observées sur modalité "TNT" (fréquences relevées en fin de saison culturale sur parcelles non traitées) sont considérées pour l'analyse régionale afin d'éviter les changements de fréquences induites par de potentiels traitements intraparcellaires.
 
 
 &nbsp;
@@ -191,17 +193,38 @@ La palette graphique utilisée pour généré les graphiques de prédiction corr
 &nbsp;
 
 #### > Ajout de variables explicatives régionales.
-Une fois l'importation des fichiers terminée, re-soumettre l'analyse.
+Les colonnes obligatoires pour l'importation d'un fichier de panel sont : "annee", "region", "matiere_active", "moa" et "ha_dc" (*cf.* Chapitre sur la compilation des données d'utilisation des fongicides).
+**1-** Choisir les substances actives à ajouter au modèle. Le chiffre entre parenthèses correspond au poids relatif de la substance active au sein du mode d'action, sur la plage temporelle d'apprentissage renseignée.
 
+**2-** Resoumettre l'analyse
+Si aucune substance active n'est sélectionnée la modélisation par défaut (modèles à taux de croissance régionnaux) est réalisée.
 
-
+**3-** Le tableau qui s'affiche sur le panneau de droite correspond à l'estimation d'une constante d'évolution du phénotype, une fois que l'utilisation des substances actives à l'échelle régionale à été considérée. La constante correspond donc à un coût (si négative)/avantage (si positive) apparent de fitness du phénotype.
+Concernant les effets estimés des différentes substances actives Une estimation positive indique que l'augmentation de l'utilisation de la substance active entrainera une augmentation de la fréquence de résistance, et inversement. 
 
 
 &nbsp;
 
+#### > Affichage des prédictions de fréquence régionalisées.
+Dans le panneau principal, utiliser le slider pour indiquer à quelle année doit être réalisée la prédiction (entre T+1 et T+5, par rapport à la dernière année présente dans les données modélisées).
+Si des covariables explicatives sont présentes dans le modèle, ajuster leur utilisation future (exprimée en pourcentage de l'avant-dernière année présente dans les données modélisées).
+Cliquer sur le bouton *Afficher/Rafraîchir la prédiction* pour faire apparaître la prédiction.
+
 
 &nbsp;
-## Compilation des données de surfaces cultivées en blé et d'utilisation des fongicides.
-Les données de surfaces cultivées en blé sont tirées de JDD d'AGRESTE (extraction *via* ARVALIS) : superficie en blé dur et en blé tendre d'hiver, exprimées en HA, par département et par an (/data/SurfacesBlé/Surfaces.xlsx). Ces données ont été mises enregistrées au format CSV (séparateur:point-virgule) dans deux fichiers distincts : un pour le blé dur (/data/SurfacesBDH.csv); et un pour le blé tendre (data/SurfacesBTH.csv). Ces deux JDD ont été mise en forme (/data/SurfacesBDH - Corrige.csv & SurfacesBTH - Corrige.csv) : supression des premières lignes inutiles, ajout d'une colonne "HA" qui correspond aux surfaces cultivées (value * 1000), suppression des caractères spéciaux dans les noms de départements ("'", ";", ... remplacés par des espaces vides " "), sélection des colonnes d'intérêt renommées en "departement", "annee" et "HA". Enfin, l'utilisation du script *Build_SurfacesBle.R* permet de fusionner les deux JDD et de mettre les bons acronymes des régions, pour finalement obtenir la donnée de surface cultivée en blé (dur+tendre) exprimée en HA, par région et par an. Ces données sont à compléter et à recompiler chaque année.
 
-Les données d'utilisation des fongicides sont tirées de JDD de BAYER : hectares déployés par susbtance active, par région et par an (/data/Fongicides/FongiCéré_Qté_HA_AI_1990-2019_Blé.xlsx). C'est données ont été enregistrées au format CSV (séparateur:point-virgule) dans le fichier /data/PanelFongicides.csv. Ce JDD a été mise en forme (/data/PanelFongicides - Corrige.csv) : suppression des premières lignes inutiles, supression des colonnes liées à la quantité de matière active exprimée en KG, renommage des colonnes "matiere_active" et "region". Enfin, l'utilisation du script *Build_UtilisationFongicide.R* permet de transformer légèrement le JDD afin d'attribuer les modes d'actions aux différentes substances actives (*via* le fichier Affiliation_MatieresActives.csv), et de mettre les bons acronymes des régions, pour finalement avoir obtenir la donnée de l'utilisation des substances actives exprimée en hectares déployés, par région et par an. Ces données sont à compléter et à recompiler chaque année.
+#### > Enregistrer la cartographie des fréquences prédites : cliquer sur le bouton *Exporter la prédiction au format PDF*.
+
+
+&nbsp;
+
+#### > Compilation des données de surfaces cultivées en blé et d'utilisation des fongicides.
+Les données de surfaces cultivées en blé sont tirées de JDD d'AGRESTE (extraction *via* ARVALIS) : superficie en blé dur et en blé tendre d'hiver, exprimées en x10^3 HA (value), par département et par an (/data/SurfacesBlé/Surfaces.xlsx). Ces données ont été enregistrées au format CSV (séparateur:point-virgule) dans deux fichiers distincts : un pour le blé dur (/data/SurfacesBDH.csv); et un pour le blé tendre (data/SurfacesBTH.csv). Ces deux JDD ont été mise en forme (/data/SurfacesBDH - Corrige.csv & SurfacesBTH - Corrige.csv) : supression des premières lignes inutiles, ajout d'une colonne "HA" qui correspond aux surfaces cultivées (value * 1000), suppression des caractères spéciaux dans les noms de départements ("'", ";", ... remplacés par des espaces vides " "), sélection des colonnes d'intérêt renommées en "departement" et "annee". Enfin, l'utilisation du script *Build_SurfacesBle.R* permet de fusionner les deux JDD et de mettre les bons acronymes des régions, pour finalement obtenir la donnée de surface cultivée en blé (dur+tendre) exprimée en HA, par région et par an. Les données compilées à l'échelle française sont également présentes à la fin du tableau sous l'acronyme "region" **FRA**. Ces données sont à compléter et à recompiler chaque année.
+
+Les données d'utilisation des fongicides sont tirées de JDD de BAYER : hectares déployés par susbtance active, par région et par an (/data/Fongicides/FongiCéré_Qté_HA_AI_1990-2019_Blé.xlsx). C'est données ont été enregistrées au format CSV (séparateur:point-virgule) dans le fichier /data/PanelFongicides.csv. Ce JDD a été mise en forme (/data/PanelFongicides - Corrige.csv) : suppression des premières lignes inutiles, supression des colonnes liées à la quantité de matière active exprimée en KG, sélection des colonnes d'intérêt renommées "matiere_active" et "region". Enfin, l'utilisation du script *Build_UtilisationFongicide.R* permet de transformer le JDD afin d'attribuer les modes d'actions aux différentes substances actives (*via* le fichier Affiliation_MatieresActives.csv), et de mettre les bons acronymes des régions, pour finalement avoir obtenir la donnée de l'utilisation des substances actives exprimée en hectares déployés, par région et par an. Les données compilées à l'échelle française sont également présentes à la fin du tableau sous l'acronyme "region" **FRA**. Les hectares déployés ont été également ramenés aux surfaces curtivées en blé dans la colonne "ha_dc", ce nouvel indicateur donne l'information du nombre moyen de passage contenant la substance active d'intérêt. Ces données sont à compléter et à recompiler chaque année.
+
+
+&nbsp;
+
+#### > Création des graphiques de co-évolution des fréquences de résistance et de l'utilisation des modes d'action fongicides.
+Ouvrir le script *Plot_FrequenceVsFongicide.R*. Exécuter le script jusqu'à la section "# sauvegarde des data #", puis exécuter un à un les bloc de code correspondants aux différents phénotype de résistance. Ces graphiques se basent sur les données d'utilisation fongicide créer dans le chapitre précédent, et des données de fréquence moyenne nationales référencées dans le fichier */data/JDDBilanFrequences.csv*. Les données présentes dans ce fichier sont à compléter annuellement (par exemple en utilisant la fonction de calcul des statistiques annuelles de l'application CartoFreq).
