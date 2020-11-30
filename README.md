@@ -1,4 +1,5 @@
 # CartoFreq : A shinyapp to display and make prediction map of frequency data in France.
+(requiert une version récente de R et RStudio + un navigateur WEB)
 
 
 &nbsp;
