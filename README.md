@@ -48,7 +48,7 @@ Si cette procédure de correction est trop longue (ou pas satisfaisante), laisse
 
 &nbsp;
 
-#### > Réaliser un second enregistrement **corrigé** au format CSV.
+#### > Réaliser un second enregistrement corrigé au format CSV.
 
 
 &nbsp;
@@ -196,6 +196,7 @@ La palette graphique utilisée pour généré les graphiques de prédiction corr
 
 #### > Ajout de variables explicatives régionales.
 Les colonnes obligatoires pour l'importation d'un fichier de panel sont : "annee", "region", "matiere_active", "moa" et "ha_dc" (*cf.* Chapitre sur la compilation des données d'utilisation des fongicides).
+
 **1-** Choisir les substances actives à ajouter au modèle. Le chiffre entre parenthèses correspond au poids relatif de la substance active au sein du mode d'action, sur la plage temporelle d'apprentissage renseignée.
 
 **2-** Resoumettre l'analyse
@@ -220,7 +221,10 @@ Cliquer sur le bouton *Afficher/Rafraîchir la prédiction* pour faire apparaît
 
 &nbsp;
 
-#### > Compilation des données de surfaces cultivées en blé et d'utilisation des fongicides.
+
+&nbsp;
+
+## > Compilation des données de surfaces cultivées en blé et d'utilisation des fongicides.
 Les données de surfaces cultivées en blé sont tirées de JDD d'AGRESTE (extraction *via* ARVALIS) : superficie en blé dur et en blé tendre d'hiver, exprimées en x10^3 HA (value), par département et par an (/data/SurfacesBlé/Surfaces.xlsx). Ces données ont été enregistrées au format CSV (séparateur:point-virgule) dans deux fichiers distincts : un pour le blé dur (/data/SurfacesBDH.csv); et un pour le blé tendre (data/SurfacesBTH.csv). Ces deux JDD ont été mise en forme (/data/SurfacesBDH - Corrige.csv & SurfacesBTH - Corrige.csv) : supression des premières lignes inutiles, ajout d'une colonne "HA" qui correspond aux surfaces cultivées (value * 1000), suppression des caractères spéciaux dans les noms de départements ("'", ";", ... remplacés par des espaces vides " "), sélection des colonnes d'intérêt renommées en "departement" et "annee". Enfin, l'utilisation du script *Build_SurfacesBle.R* permet de fusionner les deux JDD et de mettre les bons acronymes des régions, pour finalement obtenir la donnée de surface cultivée en blé (dur+tendre) exprimée en HA, par région et par an. Les données compilées à l'échelle française sont également présentes à la fin du tableau sous l'acronyme "region" **FRA**. Ces données sont à compléter et à recompiler chaque année.
 
 Les données d'utilisation des fongicides sont tirées de JDD de BAYER : hectares déployés par susbtance active, par région et par an (/data/Fongicides/FongiCéré_Qté_HA_AI_1990-2019_Blé.xlsx). C'est données ont été enregistrées au format CSV (séparateur:point-virgule) dans le fichier /data/PanelFongicides.csv. Ce JDD a été mise en forme (/data/PanelFongicides - Corrige.csv) : suppression des premières lignes inutiles, supression des colonnes liées à la quantité de matière active exprimée en KG, sélection des colonnes d'intérêt renommées "matiere_active" et "region". Enfin, l'utilisation du script *Build_UtilisationFongicide.R* permet de transformer le JDD afin d'attribuer les modes d'actions aux différentes substances actives (*via* le fichier Affiliation_MatieresActives.csv), et de mettre les bons acronymes des régions, pour finalement avoir obtenir la donnée de l'utilisation des substances actives exprimée en hectares déployés, par région et par an. Les données compilées à l'échelle française sont également présentes à la fin du tableau sous l'acronyme "region" **FRA**. Les hectares déployés ont été également ramenés aux surfaces curtivées en blé dans la colonne "ha_dc", ce nouvel indicateur donne l'information du nombre moyen de passage contenant la substance active d'intérêt. Ces données sont à compléter et à recompiler chaque année.
@@ -228,5 +232,8 @@ Les données d'utilisation des fongicides sont tirées de JDD de BAYER : hectare
 
 &nbsp;
 
-#### > Création des graphiques de co-évolution des fréquences de résistance et de l'utilisation des modes d'action fongicides.
+
+&nbsp;
+
+## > Création des graphiques de co-évolution des fréquences de résistance et de l'utilisation des modes d'action fongicides.
 Ouvrir le script *Plot_FrequenceVsFongicide.R*. Exécuter le script jusqu'à la section "# sauvegarde des data #", puis exécuter un à un les bloc de code correspondants aux différents phénotype de résistance. Ces graphiques se basent sur les données d'utilisation fongicide créer dans le chapitre précédent, et des données de fréquence moyenne nationales référencées dans le fichier */data/JDDBilanFrequences.csv*. Les données présentes dans ce fichier sont à compléter annuellement (par exemple en utilisant la fonction de calcul des statistiques annuelles de l'application CartoFreq).
