@@ -380,11 +380,15 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
         return(NULL)
       }
 
+      show_modal_spinner(spin="orbit",text="Importation en cours",color="#08298A")
+      
       currentFilePath1(paste0(getwd(),substr(as.character(inFile$datapath),2,nchar(as.character(inFile$datapath))))) # enregistrement du chemin pour affichage
       dTemp=read.table(currentFilePath1(),header=TRUE,sep=";",
                        stringsAsFactors=FALSE,na.strings=c("","-"))
       
       if(!all(mandatoryVar1%in%colnames(dTemp))){ # test de l'existence de toutes les variables obligatoires dans le fichier importé par l'utilisateur
+        remove_modal_spinner()
+        
         sendSweetAlert(session,title="Erreur",
                        text=paste0("Toutes les colonnes obligatoires (",paste(mandatoryVar1,collapse=", "),") ne sont pas présentes dans le fichier."),
                        type="error")
@@ -433,6 +437,7 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
                 tabPanel(title=h4("Cartographie"),value="2",plotOutput("graph")),
                 target="1",
                 position="after")
+      remove_modal_spinner()
     })
     
     output$refreshData <- renderUI({
@@ -647,7 +652,7 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
       
       return(cbind(ligne=c(2:(nrow(data())+1)),data()))
     },options=list(lengthMenu=list(c(10,100,1000,-1),c("10","100","1000","All")),
-                   pageLength=100))
+                   pageLength=100),rownames= FALSE)
     
     
     
@@ -941,17 +946,19 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
         return(NULL)
       }
       
-      sendSweetAlert(session,title="Warning",
-                     text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
-                                 "%] des fréquences ",plottedPhenotype()," (",plottedModality(),")"," en ",plottedYear(),
-                                 " ont dû être retirées pour l'analyse spatiale. Causes possibles : présence (i) de NA 
+      if(Nremoved>0){
+        sendSweetAlert(session,title="Warning",
+                       text=paste0("[",Nremoved," - ",round((Nremoved/Ntotal)*100,2),
+                                   "%] des fréquences ",plottedPhenotype()," (",plottedModality(),")"," en ",plottedYear(),
+                                   " ont dû être retirées pour l'analyse spatiale. Causes possibles : présence (i) de NA 
                                  dans les colonnes code_essai, commune ou numero_departement, ou (ii) de couples 
                                  commune/numero_departement inconnus (problème d'affiliation GPS), ou (iii) de valeurs 
                                  inconnues dans la colonne numero_departement (problème d'affiliation regionale), ou 
                                  encore (iv) de valeurs non numériques, ou inférieures à 0, ou supérieures à 100 dans la colonne ",
-                                 plottedPhenotype(),". Toutes ces erreurs sont détaillées pour chaque colonne dans l'onglet Tableau."),
-                     type="warning")
-      d=d[-as.numeric(rmLines),]
+                                   plottedPhenotype(),". Toutes ces erreurs sont détaillées pour chaque colonne dans l'onglet Tableau."),
+                       type="warning")
+        d=d[-as.numeric(rmLines),]
+      }
       
       # Debut du processus d'analyse spatiale #
       show_modal_spinner(spin="orbit",text="Analyse en cours",color="#08298A")
@@ -1304,10 +1311,7 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
         currentFilePath2(NULL)
         return(NULL)
       }
-      
-      # toutes les substances actives au MOA inconnu sont classées dans "OTHER"
-      dTemp$moa[which(is.na(dTemp$moa))]="OTHER"
-      
+
       data2(dTemp)
     })
     
@@ -1327,6 +1331,9 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
       if(!is.null(timeRange())){
         panel=panel[which(panel$annee%in%c(timeRange()[1]:timeRange()[2])),]
       }
+      
+      saveRDS(panel,"panel.rds")
+      # panel=readRDS("panel.rds")
 
       # liste des substances actives, associées à leur MOA
       agg=aggregate(list(moa=panel$moa),list(matiere_active=panel$matiere_active),function(x){
@@ -1337,6 +1344,9 @@ regionsplot=regionsplot[-which(is.na(regionsplot$X)),]
         names(table(agg$matiere_active[which(agg$moa==x)]))
       })
       
+      # !!!!!!!! RETIRER LES DONNEES EN REGION==FRA
+      panel=panel[-which(panel$region=="FRA" &
+                           grepl("SOMME\\.",panel$matiere_active)),]
       # ajout de l'information concernant le poids relatif de la substance active au sein du MOA
       aggMOA=aggregate(list(ha_deployes=panel$ha_deployes),list(moa=panel$moa),"sum")
       aggMOL=aggregate(list(ha_deployes=panel$ha_deployes),list(matiere_active=panel$matiere_active,moa=panel$moa),"sum")
